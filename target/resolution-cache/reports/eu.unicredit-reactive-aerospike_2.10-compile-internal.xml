@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ivy-report.xsl"?>
+<ivy-report version="1.0">
+	<info
+		organisation="eu.unicredit"
+		module="reactive-aerospike_2.10"
+		revision="0.1.1-SNAPSHOT"
+		conf="compile-internal"
+		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
+		date="20141128151213"/>
+	<dependencies>
+		<module organisation="org.mindrot" name="jbcrypt">
+			<revision name="0.3m" status="release" pubdate="20100517044639" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.mindrot.org/" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="3">
+				<license name="ISC/BSD License"/>
+				<metadata-artifact status="no" details="" size="2822" time="0" location="/home/andrea/.ivy2/cache/org.mindrot/jbcrypt/ivy-0.3m.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/mindrot/jbcrypt/0.3m/jbcrypt-0.3m.pom"/>
+				<caller organisation="eu.unicredit" name="reactive-aerospike_2.10" conf="optional, compile, provided, compile-internal" rev="0.3m" rev-constraint-default="0.3m" rev-constraint-dynamic="0.3m" callerrev="0.1.1-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="jbcrypt" type="jar" ext="jar" status="no" details="" size="17750" time="0" location="/home/andrea/.ivy2/cache/org.mindrot/jbcrypt/jars/jbcrypt-0.3m.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/mindrot/jbcrypt/0.3m/jbcrypt-0.3m.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.gnu" name="gnu-crypto">
+			<revision name="2.0.1" status="release" pubdate="20140224193428" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.gnu.org/software/gnu-crypto" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="2">
+				<license name="The GNU General Public License" url="http://www.gnu.org/licenses/gpl.html"/>
+				<metadata-artifact status="no" details="" size="2755" time="0" location="/home/andrea/.ivy2/cache/org.gnu/gnu-crypto/ivy-2.0.1.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/gnu/gnu-crypto/2.0.1/gnu-crypto-2.0.1.pom"/>
+				<caller organisation="eu.unicredit" name="reactive-aerospike_2.10" conf="optional, compile, provided, compile-internal" rev="2.0.1" rev-constraint-default="2.0.1" rev-constraint-dynamic="2.0.1" callerrev="0.1.1-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="gnu-crypto" type="jar" ext="jar" status="no" details="" size="598087" time="0" location="/home/andrea/.ivy2/cache/org.gnu/gnu-crypto/jars/gnu-crypto-2.0.1.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/gnu/gnu-crypto/2.0.1/gnu-crypto-2.0.1.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.luaj" name="luaj-jse">
+			<revision name="3.0" status="release" pubdate="20140704071713" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://sourceforge.net/projects/luaj/" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="1">
+				<license name="MIT License" url="http://luaj.sourceforge.net/license.txt"/>
+				<metadata-artifact status="no" details="" size="2346" time="0" location="/home/andrea/.ivy2/cache/org.luaj/luaj-jse/ivy-3.0.xml" searched="false" origin-is-local="false" origin-location="http://repo1.maven.org/maven2/org/luaj/luaj-jse/3.0/luaj-jse-3.0.pom"/>
+				<caller organisation="eu.unicredit" name="reactive-aerospike_2.10" conf="optional, compile, provided, compile-internal" rev="3.0" rev-constraint-default="3.0" rev-constraint-dynamic="3.0" callerrev="0.1.1-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="luaj-jse" type="jar" ext="jar" status="no" details="" size="338785" time="0" location="/home/andrea/.ivy2/cache/org.luaj/luaj-jse/jars/luaj-jse-3.0.jar">
+						<origin-location is-local="false" location="http://repo1.maven.org/maven2/org/luaj/luaj-jse/3.0/luaj-jse-3.0.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-lang" name="scala-library">
+			<revision name="2.10.4" status="release" pubdate="20140318224629" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.10.4/" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="0">
+				<license name="BSD-like" url="http://www.scala-lang.org/downloads/license.html          "/>
+				<metadata-artifact status="no" details="" size="2487" time="0" location="/home/andrea/.ivy2/cache/org.scala-lang/scala-library/ivy-2.10.4.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.4/scala-library-2.10.4.pom"/>
+				<caller organisation="eu.unicredit" name="reactive-aerospike_2.10" conf="optional, compile, provided, compile-internal" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.1.1-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="scala-library" type="jar" ext="jar" status="no" details="" size="7126372" time="0" location="/home/andrea/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.10.4.jar">
+						<origin-location is-local="false" location="UNKNOWN"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+	</dependencies>
+</ivy-report>

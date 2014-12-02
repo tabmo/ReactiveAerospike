@@ -1,0 +1,6 @@
+[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
+[0m[[0mdebug[0m] [0m	(/home/andrea/workspace/reactive-aerospike/src/main/resources/udf,/home/andrea/workspace/reactive-aerospike/target/scala-2.10/classes/udf)[0m
+[0m[[0mdebug[0m] [0m	(/home/andrea/workspace/reactive-aerospike/src/main/resources/udf/compat52.lua,/home/andrea/workspace/reactive-aerospike/target/scala-2.10/classes/udf/compat52.lua)[0m
+[0m[[0mdebug[0m] [0m	(/home/andrea/workspace/reactive-aerospike/src/main/resources/udf/aerospike.lua,/home/andrea/workspace/reactive-aerospike/target/scala-2.10/classes/udf/aerospike.lua)[0m
+[0m[[0mdebug[0m] [0m	(/home/andrea/workspace/reactive-aerospike/src/main/resources/udf/as.lua,/home/andrea/workspace/reactive-aerospike/target/scala-2.10/classes/udf/as.lua)[0m
+[0m[[0mdebug[0m] [0m	(/home/andrea/workspace/reactive-aerospike/src/main/resources/udf/stream_ops.lua,/home/andrea/workspace/reactive-aerospike/target/scala-2.10/classes/udf/stream_ops.lua)[0m
