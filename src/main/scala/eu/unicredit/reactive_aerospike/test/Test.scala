@@ -3,11 +3,11 @@ package eu.unicredit.reactive_aerospike.test
 import eu.unicredit.reactive_aerospike.client._
 import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.data.AerospikeRecord.Defaults._
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
 import scala.concurrent._
 import scala.concurrent.duration._
+import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 
 object Test extends App {
 
@@ -15,19 +15,24 @@ object Test extends App {
 
   val record =
     AerospikeRecord(
-      Seq(
       ("numero" -> 5),
       ("stringa" -> "pippo")
-      )
     )
   
   val client = new AerospikeClient("localhost", 3000)
   
-  val key = AerospikeKey("test", "demo", "putgetkey")
-  val bin = AerospikeBin("prova" -> 1234)
+  val key = AerospikeKey("test", "demo", "1234")
+  val bin: AerospikeBin[_] = ("prova" -> 1234)
+  
+  bin.value match {
+    case int: AerospikeInt =>
+      println("E' un int!!! "+int)
+    case _ => println("Errore!!!")
+  }
+ 
 
-  import com.aerospike.client._
-  import com.aerospike.client.async._
+  //import com.aerospike.client._
+  //import com.aerospike.client.async._
   /*
   		val policy = new AsyncClientPolicy();
 		policy.user = "";

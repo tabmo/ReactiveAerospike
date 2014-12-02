@@ -1,33 +1,37 @@
 package eu.unicredit.reactive_aerospike
 
 import com.aerospike.client.{ Bin, Key }
+import data.AerospikeValue.AerospikeValueConverter
 
 package object data {
 
   //Aerospike Value implicits
+  
   implicit def fromNullToAS(n: Null) =
-    AerospikeValue(n)
+    AerospikeValue.AerospikeNull()
 
   implicit def fromStringToAS(s: String) =
-    AerospikeValue(s)
+    AerospikeValue(s)(AerospikeValue.AerospikeStringRW)
 
   implicit def fromIntToAS(i: Int) =
-    AerospikeValue(i)
+    AerospikeValue(i.toLong)(AerospikeValue.AerospikeLongRW)
   implicit def fromLongToAS(l: Long) =
-    AerospikeValue(l)
+    AerospikeValue(l)(AerospikeValue.AerospikeLongRW)
 
   //From and to Bin
-  implicit def fromTupleToBin[T <: Any](t: (String, T)): AerospikeBin[AerospikeValue[_]] =
-    AerospikeBin(t._1, AerospikeValue(t._2))
+  implicit def fromTupleToBin[T <: Any](t: (String, T))
+  		(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =
+    AerospikeBin(t._1, converter.toAsV(t._2), converter)
 
-  implicit def fromABToBin(ab: AerospikeBin[AerospikeValue[_]]): Bin =
+  implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
     ab.inner
 
   //from and to aerospike Key
-  implicit def fromAKToK(ak: AerospikeKey[AerospikeValue[_]]): Key =
+  implicit def fromAKToK[T <: Any](ak: AerospikeKey[AerospikeValue[T]]): Key =
     ak.inner
 
   //from seq to Array of Bins
-  implicit def fromSeqToArr(in: Seq[AerospikeBin[AerospikeValue[_]]]): Array[AerospikeBin[AerospikeValue[_]]] =
+  implicit def fromSeqToArr[T <: Any](in: Seq[AerospikeBin[AerospikeValue[T]]]): 
+	  	Array[AerospikeBin[AerospikeValue[T]]] =
     in.toArray
 }

@@ -2,32 +2,38 @@ package eu.unicredit.reactive_aerospike.data
 
 import com.aerospike.client.Key
 import scala.language.existentials
+import AerospikeValue.AerospikeValueConverter
 
-case class AerospikeKey[T <: AerospikeValue[_]](
+case class AerospikeKey[T <: Any](
     namespace: String,
     setName: String,
-    userKey: T) {
-
+    userKey: AerospikeValue[T],
+    converter: AerospikeValueConverter[T]) {
+  
   val inner = new Key(namespace, setName, userKey)
 
 }
 
 object AerospikeKey {
 
-  def apply(namespace: String,
+  def apply[T <: Any](namespace: String,
     setName: String,
-    userKey: Any): AerospikeKey[AerospikeValue[_]] =
+    userKey: T)
+  	(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
     AerospikeKey(
       namespace,
       setName,
-      AerospikeValue(userKey)
+      converter.toAsV(userKey),
+      converter
     )
 
-  def apply(key: Key): AerospikeKey[AerospikeValue[_]] =
+  def apply[T <: Any](key: Key)
+  	(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
     AerospikeKey(
       key.namespace,
       key.setName,
-      AerospikeValue(key.userKey)
+      converter.fromValue(key.userKey),
+      converter
       )
 
 //  implicit def fromAKToK(ak: AerospikeKey[_]): Key =

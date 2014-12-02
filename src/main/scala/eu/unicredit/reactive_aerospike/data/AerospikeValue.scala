@@ -38,7 +38,13 @@ object AerospikeValue {
     catch {
       case err: Throwable => None
     }
+  
+  trait AerospikeValueConverter[T] {
+    def toAsV(x: T): AerospikeValue[T]
+    def fromValue(x: Value): AerospikeValue[T]
+  }
 
+  /*
   def apply(x: Any): AerospikeValue[_] = {
     if (x == null) AerospikeNull()
     else
@@ -48,11 +54,47 @@ object AerospikeValue {
         case i: Int => AerospikeInteger(i)
         case l: Long => AerospikeInteger(l)
         case any =>
-          	println(s"Match not found! ${any} ${any.getClass}")
+          	println(s"Default match not found! ${any} ${any.getClass}")
           	AerospikeNull()
       }
   }
+  */
+   
+  implicit object AerospikeNullRW extends AerospikeValueConverter[Null] {
+    def toAsV(n: Null): AerospikeNull = AerospikeNull()
+    def fromValue(vi: Value): AerospikeNull = AerospikeNull() 
+  }
 
+  implicit object AerospikeLongRW extends AerospikeValueConverter[Long] {
+    def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
+    def fromValue(vi: Value): AerospikeLong = AerospikeLong(vi.toLong()) 
+  }
+  
+  implicit object AerospikeIntRW extends AerospikeValueConverter[Int] {
+    def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
+    def fromValue(vi: Value): AerospikeInt = AerospikeInt(vi.toInteger()) 
+  }
+  
+  implicit object AerospikeStringRW extends AerospikeValueConverter[String] {
+    def toAsV(s: String): AerospikeString = AerospikeString(s)
+    def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
+  }
+  
+  def apply[T](x: T)
+  			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
+	  conv.toAsV(x)
+  }
+  
+  /*
+  def unapply[T1 <: Any,T2 <: AerospikeValue[T1]]
+		  	(x: T2)
+  			(implicit conv: AerospikeValueConverter[T1]): T1 = {
+	  conv.fromValue(x)
+  }
+  */
+
+
+  
   case class AerospikeNull()
       extends AerospikeValue[Null] {
     override val inner = new NullValue
@@ -67,9 +109,14 @@ object AerospikeValue {
 
   //  implicit def fromObjectToString(o: java.lang.Object) =
   //    AerospikeString(o.asInstanceOf[String])
-
-  case class AerospikeInteger(i: Long)
-      extends AerospikeValue[Long] {
+  
+  case class AerospikeLong(l: Long)
+  	  extends AerospikeValue[Long] {
+    override val inner = new LongValue(l)
+  }
+  
+  case class AerospikeInt(i: Int)
+      extends AerospikeValue[Int] {
     override val inner = new LongValue(i)
   }
 

@@ -25,34 +25,39 @@ case class AerospikeClient
 	// Write Record Operations
 	//-------------------------------------------------------
 	
-	/**
-	 * Asynchronously write record bin(s). 
-	 * This method schedules the put command with a channel selector and returns.
-	 * Another thread will process the command and send the results to the listener.
-	 * <p>
-	 * The policy specifies the transaction timeout, record expiration and how the transaction is
-	 * handled when the record already exists.
-	 * 
-	 * @param policy				write configuration parameters, pass in null for defaults
-	 * @param listener				where to send results, pass in null for fire and forget
-	 * @param key					unique record identifier
-	 * @param bins					array of bin name/value pairs
-	 * @throws AerospikeException	if queue is full
-	 */
-	 /*
-	public final void put(WritePolicy policy, WriteListener listener, Key key, Bin... bins) throws AerospikeException {		
-		if (policy == null) {
-			policy = writePolicyDefault;
-		}
-		AsyncWrite command = new AsyncWrite(cluster, policy, listener, key, bins, Operation.Type.WRITE);
-		command.execute();
-	}*/
-    //Better to put directly a record?
     def put(key: AerospikeKey[_], bins: AerospikeBin[_]*)
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[_]] = {
-		val wl = AerospikeWriteListener()
+	  	val wl = AerospikeWriteListener()(key.converter)
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
 		wl.result.map(_.key)
 	}
+  /*
+   def put(key: AerospikeKey[_], record: AerospikeRecord)
+   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[_]] = {
+		val wl = AerospikeWriteListener()
+		super.put(wpolicy, wl, key.inner, record.bins.map(_.inner):_*)
+		wl.result.map(_.key)
+  	}
+*/
+   	//-------------------------------------------------------
+	// Read Record Operations
+	//-------------------------------------------------------
+   
+   /*
+   public final void get(Policy policy, RecordListener listener, Key key) throws AerospikeException {
+		if (policy == null) {
+			policy = readPolicyDefault;
+		}
+		AsyncRead command = new AsyncRead(cluster, policy, listener, key, null);
+		command.execute();
+	}*/
+   /*
+   def get(key: AerospikeKey[_])
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[AerospikeKey[_]] = {
+     val rl = AerospikeReadListener()
+     
+   }
+   * 
+   */
 
 }

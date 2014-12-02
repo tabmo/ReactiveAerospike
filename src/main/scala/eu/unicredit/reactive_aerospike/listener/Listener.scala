@@ -1,10 +1,10 @@
 package eu.unicredit.reactive_aerospike.listener
 
-import com.aerospike.client.AerospikeException
-import com.aerospike.client.Key
-import com.aerospike.client.listener.WriteListener
+import com.aerospike.client.{AerospikeException, Key,Record}
+import com.aerospike.client.listener.{WriteListener, RecordListener}
 import scala.concurrent.Promise
-import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeValue}
+import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeValue, AerospikeRecord}
+import AerospikeValue.AerospikeValueConverter
 import scala.language.existentials
 
 trait Listener[T <: CommandResult] {
@@ -13,14 +13,15 @@ trait Listener[T <: CommandResult] {
 }
 
 class CommandResult() {}
-case class AerospikeWriteReturn(key: AerospikeKey[AerospikeValue[_]]) extends CommandResult
-case class AerospikeDeleteReturn(key: Key, existed: Boolean) extends CommandResult 
-case class AerospikeExistsReturn(key: Key, existed: Boolean) extends CommandResult
+case class AerospikeWriteReturn[T <: Any](key: AerospikeKey[T]) extends CommandResult
+//case class AerospikeDeleteReturn(key: Key, existed: Boolean) extends CommandResult 
+//case class AerospikeExistsReturn(key: Key, existed: Boolean) extends CommandResult
+//case class AerospikeReadReturn(key: AerospikeKey[AerospikeValue[_]], record: AerospikeRecord) extends CommandResult
 
 
-case class AerospikeWriteListener() 
+case class AerospikeWriteListener[T <: Any]()(implicit converter: AerospikeValueConverter[T]) 
 				extends WriteListener 
-				with Listener[AerospikeWriteReturn] {
+				with Listener[AerospikeWriteReturn[T]] {
   	def onSuccess(key: Key) = {
   	  promise.success(
   	      AerospikeWriteReturn(
@@ -33,3 +34,19 @@ case class AerospikeWriteListener()
 }
 //case class ExistsListener() extends Listener[ExistsReturn] {}
 //case class DeleteListener() extends Listener[DeleteReturn] {}
+
+/*
+case class AerospikeReadListener()
+				extends RecordListener 
+				with Listener[AerospikeReadReturn] {
+  
+	def onSuccess(key: Key, record: Record) = {
+  	  promise.success(
+  	      AerospikeReadReturn(
+  			  AerospikeKey(key), AerospikeRecord(record)))
+  	}
+	
+	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}*/
