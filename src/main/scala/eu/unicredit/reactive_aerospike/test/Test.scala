@@ -13,11 +13,13 @@ object Test extends App {
 
   println("Starting test...")
 
+  /*
   val record =
-    AerospikeRecord(
+    new AerospikeRecord(
       ("numero" -> 5),
       ("stringa" -> "pippo")
     )
+    */
   
   val client = new AerospikeClient("localhost", 3000)
   

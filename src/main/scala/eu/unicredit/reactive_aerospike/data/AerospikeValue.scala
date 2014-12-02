@@ -85,15 +85,11 @@ object AerospikeValue {
 	  conv.toAsV(x)
   }
   
-  /*
-  def unapply[T1 <: Any,T2 <: AerospikeValue[T1]]
-		  	(x: T2)
-  			(implicit conv: AerospikeValueConverter[T1]): T1 = {
+  def apply[T <: Any]
+		  	(x: Value)
+  			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
 	  conv.fromValue(x)
   }
-  */
-
-
   
   case class AerospikeNull()
       extends AerospikeValue[Null] {

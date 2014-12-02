@@ -22,7 +22,7 @@ package object data {
   implicit def fromTupleToBin[T <: Any](t: (String, T))
   		(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =
     AerospikeBin(t._1, converter.toAsV(t._2), converter)
-
+  
   implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
     ab.inner
 
@@ -34,4 +34,5 @@ package object data {
   implicit def fromSeqToArr[T <: Any](in: Seq[AerospikeBin[AerospikeValue[T]]]): 
 	  	Array[AerospikeBin[AerospikeValue[T]]] =
     in.toArray
+    
 }

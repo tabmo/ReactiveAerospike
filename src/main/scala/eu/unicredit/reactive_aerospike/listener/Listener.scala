@@ -16,7 +16,7 @@ class CommandResult() {}
 case class AerospikeWriteReturn[T <: Any](key: AerospikeKey[T]) extends CommandResult
 //case class AerospikeDeleteReturn(key: Key, existed: Boolean) extends CommandResult 
 //case class AerospikeExistsReturn(key: Key, existed: Boolean) extends CommandResult
-//case class AerospikeReadReturn(key: AerospikeKey[AerospikeValue[_]], record: AerospikeRecord) extends CommandResult
+case class AerospikeReadReturn[T <: Any](key: AerospikeKey[T], record: AerospikeRecord) extends CommandResult
 
 
 case class AerospikeWriteListener[T <: Any]()(implicit converter: AerospikeValueConverter[T]) 
@@ -36,17 +36,18 @@ case class AerospikeWriteListener[T <: Any]()(implicit converter: AerospikeValue
 //case class DeleteListener() extends Listener[DeleteReturn] {}
 
 /*
-case class AerospikeReadListener()
+case class AerospikeReadListener[T <: Any]()(implicit converter: AerospikeValueConverter[T]) 
 				extends RecordListener 
-				with Listener[AerospikeReadReturn] {
+				with Listener[AerospikeReadReturn[T]] {
   
 	def onSuccess(key: Key, record: Record) = {
   	  promise.success(
   	      AerospikeReadReturn(
-  			  AerospikeKey(key), AerospikeRecord(record)))
+  			  AerospikeKey(key), AerospikeRecord()))
   	}
 	
 	def onFailure(exception: AerospikeException) = {
   	  promise.failure(exception)
 	}
-}*/
+}
+*/

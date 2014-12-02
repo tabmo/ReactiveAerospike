@@ -25,20 +25,20 @@ case class AerospikeClient
 	// Write Record Operations
 	//-------------------------------------------------------
 	
-    def put(key: AerospikeKey[_], bins: AerospikeBin[_]*)
-			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[_]] = {
+    def put[T](key: AerospikeKey[T], bins: AerospikeBin[_]*)
+			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[T]] = {
 	  	val wl = AerospikeWriteListener()(key.converter)
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
 		wl.result.map(_.key)
 	}
-  /*
-   def put(key: AerospikeKey[_], record: AerospikeRecord)
-   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[_]] = {
-		val wl = AerospikeWriteListener()
+  
+   def put[T](key: AerospikeKey[T], record: AerospikeRecord)
+   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[T]] = {
+		val wl = AerospikeWriteListener()(key.converter)
 		super.put(wpolicy, wl, key.inner, record.bins.map(_.inner):_*)
 		wl.result.map(_.key)
   	}
-*/
+  
    	//-------------------------------------------------------
 	// Read Record Operations
 	//-------------------------------------------------------
@@ -57,7 +57,5 @@ case class AerospikeClient
      val rl = AerospikeReadListener()
      
    }
-   * 
-   */
-
+  */ 
 }
