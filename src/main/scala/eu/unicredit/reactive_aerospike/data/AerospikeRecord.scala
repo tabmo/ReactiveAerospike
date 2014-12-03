@@ -8,10 +8,9 @@ import AerospikeRecord._
 
 class AerospikeRecord(
 						bins: Seq[AerospikeBin[_]],
-						//converter : Seq[AerospikeValueConverter[_]]*/
 						generation: AerospikeRecord.Generation,
-                        expiration: AerospikeRecord.Expiration) {
-  
+                        expiration: AerospikeRecord.Expiration) {		  
+
   def getBins = bins
    
   def toRecordBins: Seq[(String, Object)] =
@@ -40,49 +39,90 @@ object AerospikeRecord {
 
   
   case class SingleIntRecord(
-						ib: AerospikeBin[Int]
+						ib: AerospikeValue[Int]
 						)(implicit 
                           generation: AerospikeRecord.Generation,
                           expiration: AerospikeRecord.Expiration) 
-                          extends AerospikeRecord(Seq(ib),generation,expiration) {
+                          extends AerospikeRecord(Seq(("ib" -> ib)),generation,expiration) {
     
-    def prova = ib.value
+    def prova = ib
   }
   
   implicit object SingleIntRecordReader 
   	extends AerospikeRecordConverter[SingleIntRecord] {
-	  val generation = Defaults.generation
-	  val expiration = Defaults.expiration 
-	  val converters = Seq(AerospikeIntReader)
-	  
-	  def toRecord(ar: Seq[AerospikeBin[_]]): SingleIntRecord =
-	    ar(0).value match {
-      		case ib: AerospikeInt =>
-      		  	SingleIntRecord(AerospikeBin(ar(0).name,ib.i ))(generation,expiration)
-      		case _ => 
-      		  throw new Exception("Cannot go from generic to instance")
-	  	}
-  } 
+	  val converters = Map("ib" -> AerospikeIntReader)
+	    
+	  def toRecord(ar: Map[String,AerospikeValue[_]]): SingleIntRecord =
+	    SingleIntRecord(ar("ib"))
+
+  }
   
+  case class IntStringRecord(
+						ib: AerospikeValue[Int],
+						is: AerospikeValue[String]
+						)(implicit 
+                          generation: AerospikeRecord.Generation,
+                          expiration: AerospikeRecord.Expiration) 
+                          extends AerospikeRecord(Seq(("ib" -> ib),("is" -> is)),generation,expiration) {
+    
+    def prova = (ib, is)
+  }
+  
+  implicit object IntStringRecordReader 
+  	extends AerospikeRecordConverter[IntStringRecord] {
+	  val converters = Map(
+			  				"ib" -> AerospikeIntReader, 
+			  				"is" -> AerospikeStringReader)
+	    
+	  def toRecord(ar: Map[String,AerospikeValue[_]]): IntStringRecord =
+	    IntStringRecord(ar("ib"), ar("is"))
+
+  }
+  
+  case class IntStringLongRecord(
+						ib: AerospikeValue[Int],
+						is: AerospikeValue[String],
+						il: AerospikeValue[Long]
+						)(implicit 
+                          generation: AerospikeRecord.Generation,
+                          expiration: AerospikeRecord.Expiration) 
+                          extends AerospikeRecord(Seq(("ib" -> ib),("is" -> is),("il" -> il)),generation,expiration) {
+    
+    def prova = (ib, is, il)
+  }
+  
+  implicit object IntStringLongRecordReader 
+  	extends AerospikeRecordConverter[IntStringLongRecord] {
+	  val converters = 
+	    Map(
+	        "ib" -> AerospikeIntReader, 
+	        "is" -> AerospikeStringReader, 
+	        "il" -> AerospikeLongReader)
+	    
+	  def toRecord(ar: Map[String,AerospikeValue[_]]): IntStringLongRecord =
+	    IntStringLongRecord(ar("ib"), ar("is"), ar("il"))
+
+  }
+ 
   trait AerospikeRecordConverter[+AR <: AerospikeRecord] {
-    val generation: AerospikeRecord.Generation
-    val expiration: AerospikeRecord.Expiration
+    implicit val generation: AerospikeRecord.Generation = Defaults.generation
+    implicit val expiration: AerospikeRecord.Expiration = Defaults.expiration 
     
-    val converters: Seq[AerospikeValueConverter[_]]
+    val converters: Map[String,AerospikeValueConverter[_]]
     
-    //maybe deeper
-    @unchecked
-    def toRecord(ar: Seq[AerospikeBin[_]]): AR
-    //(new AerospikeRecord(bins, generation,expiration)).asInstanceOf[AR]
+    def toRecord(ar: Map[String,AerospikeValue[_]]): AR
+
   }
   
   def apply[AR <: AerospikeRecord](record: Record)
   	(implicit converter: AerospikeRecordConverter[AR]): AR = {
   	  converter.toRecord(
-   	      record.bins.
-  	      zip(converter.converters).map(x =>
-  	        AerospikeBin(x._1, x._2)
-  	          ).toSeq
+  		  record.bins.map(b => (b,converter.converters(b._1)))
+  		  .map(x => {
+  	        val bin = x._1
+  	        val conv = x._2
+  	        bin._1 -> conv.fromValue(Value.get(bin._2)) 
+  	      }).toMap
   	      )
   }
   

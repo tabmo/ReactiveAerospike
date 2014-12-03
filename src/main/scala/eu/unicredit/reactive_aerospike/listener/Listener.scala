@@ -46,7 +46,11 @@ case class AerospikeReadListener[AR <: AerospikeRecord]()
 				with Listener[AerospikeReadReturn[AR]] {
   
 	def onSuccess(key: Key, record: Record) = {
-	  AerospikeKey(key)
+	  try {
+	    AerospikeRecord(record)
+	  } catch {
+	    case err: Throwable => err.printStackTrace()
+	  }
   	  promise.success(
   	      AerospikeReadReturn(
   			  AerospikeKey(key), AerospikeRecord(record)))

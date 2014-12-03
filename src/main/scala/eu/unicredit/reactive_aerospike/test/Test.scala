@@ -24,17 +24,26 @@ object Test extends App {
   
   val client = new AerospikeClient("localhost", 3000)
   
-  val key = AerospikeKey("test", "demo", "1234")
-  val bin: AerospikeBin[Int] = ("prova" -> 1234)
+  val key = AerospikeKey("test", "demoRecord2", "12345")
+  //val bin: AerospikeBin[Int] = ("prova" -> 1234)
   
-  val record = SingleIntRecord(bin)
+  val record = SingleIntRecord(1234)
   
+  
+  val record2 =
+    IntStringLongRecord(
+        1234,
+        "CIAO!",
+        123456789L
+        )
+       
+  /*
   bin.value match {
     case int: AerospikeInt =>
       println("E' un int!!! "+int)
     case _ => println("Errore!!!")
   }
- 
+ */
 
   //import com.aerospike.client._
   //import com.aerospike.client.async._
@@ -76,8 +85,44 @@ object Test extends App {
   //client.put(null, key, bin)
   //val prova = client.get(null, key)
 
+  client.delete(null, key.inner)
+ Thread.sleep(2000)
+   client.put(key, record2).onComplete{
+      case Success(res) => 
+        	println(s"GREIT $res")
+        	
+        	client.get[IntStringLongRecord](res).onComplete{
+        	  case Success(ok) =>
+        	    	println("Looks ok!")
+        	    	println("Result is"+
+        	    				ok._1.userKey+
+        	    				" record is: "+
+        	    				ok._2.getClass().getName()+
+        	    				" ")
+        	    	
+        	    	ok._2 match {
+        	    	  case sir: IntStringLongRecord =>
+        	    	    println("OOOOK "+sir.prova)
+        	    	  case any =>
+        	    	    println("azz è un any")
+        	    	}
+        	    	
+        	    	end.trySuccess(true)
+        	  case Failure(err) =>
+        	    	println("err2 "+err)
+        	}
+        	
+      case Failure(err) => 
+        	println("ERRORE!!!! "+err)
+        	end.trySuccess(false)
+  }
+
+ /* this works
     println("--> ")
-  client.put(key, bin).onComplete{
+ client.delete(null, key.inner)
+ Thread.sleep(2000)
+ 
+  client.put(key, record).onComplete{
       case Success(res) => 
         	println(s"GREIT $res")
         	
@@ -100,12 +145,14 @@ object Test extends App {
         	    	end.trySuccess(true)
         	  case Failure(err) =>
         	    	println("err2 "+err)
+        	    	end.trySuccess(false)
         	}
         	
       case Failure(err) => 
         	println(err)
         	end.trySuccess(false)
   }
+  */ 
   /*
   for {
 	  ret <- client.put(key, bin)
@@ -122,6 +169,8 @@ object Test extends App {
   for {
     readyToClose <- end.future 
   } yield {
+    println("Closing client")
+    Thread.sleep(3000)
     client.close()
   }
   

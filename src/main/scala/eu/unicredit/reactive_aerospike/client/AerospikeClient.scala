@@ -55,7 +55,7 @@ case class AerospikeClient
    
    def get[AR <: AerospikeRecord](key: AerospikeKey[_])
    			(implicit rpolicy: Policy = policy.readPolicyDefault,
-   			 recordReader: AerospikeRecordConverter[AR])/*: Future[AerospikeKey[_]]*/ = {
+   			 recordReader: AerospikeRecordConverter[AR]): Future[(AerospikeKey[_], AerospikeRecord)] = {
      implicit val keyConverter = key.converter 
      val rl = AerospikeReadListener[AR]()
      super.get(rpolicy,rl,key.inner)

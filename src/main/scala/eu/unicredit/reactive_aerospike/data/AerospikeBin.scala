@@ -10,16 +10,16 @@ case class AerospikeBin[T <: Any]
   val inner = new Bin(name, value.inner)
 
   def toRecordValue = (name -> value.inner.getObject)
- 
+  
 }
 
 object AerospikeBin {
- /* 
+ /*
   def apply[T <: Any, AV <: AerospikeValue[T]](name: String, aerospikeValue: AV)
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
     AerospikeBin(name, aerospikeValue, converter)
   }
- */ 
+ */
   def apply[T <: Any](name: String, value: T)
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
     AerospikeBin(name, converter.toAsV(value), converter)
