@@ -14,15 +14,25 @@ case class AerospikeBin[T <: Any]
 }
 
 object AerospikeBin {
-  
+ /* 
+  def apply[T <: Any, AV <: AerospikeValue[T]](name: String, aerospikeValue: AV)
+  	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
+    AerospikeBin(name, aerospikeValue, converter)
+  }
+ */ 
   def apply[T <: Any](name: String, value: T)
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
     AerospikeBin(name, converter.toAsV(value), converter)
   }
 
+  /*
   def apply[T <: Any](tuple: (String, T))
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =
 		  AerospikeBin(tuple._1, converter.toAsV(tuple._2), converter)
+   */		  
+  def apply[T <: Any](tuple: (String, Object),
+		  converter: AerospikeValueConverter[T]): AerospikeBin[T] =
+		  AerospikeBin(tuple._1, AerospikeValue(tuple._2, converter), converter)		  
 /*		  
   def apply[T <: Any](tuple: (String, Value))
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =

@@ -8,6 +8,7 @@ import scala.util.{Success, Failure}
 import scala.concurrent._
 import scala.concurrent.duration._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
+import eu.unicredit.reactive_aerospike.data.AerospikeRecord._
 
 object Test extends App {
 
@@ -24,7 +25,9 @@ object Test extends App {
   val client = new AerospikeClient("localhost", 3000)
   
   val key = AerospikeKey("test", "demo", "1234")
-  val bin: AerospikeBin[_] = ("prova" -> 1234)
+  val bin: AerospikeBin[Int] = ("prova" -> 1234)
+  
+  val record = SingleIntRecord(bin)
   
   bin.value match {
     case int: AerospikeInt =>
@@ -77,7 +80,28 @@ object Test extends App {
   client.put(key, bin).onComplete{
       case Success(res) => 
         	println(s"GREIT $res")
-        	end.trySuccess(true)
+        	
+        	client.get[SingleIntRecord](res).onComplete{
+        	  case Success(ok) =>
+        	    	println("Looks ok!")
+        	    	println("Result is"+
+        	    				ok._1.userKey+
+        	    				" record is: "+
+        	    				ok._2.getClass().getName()+
+        	    				" ")
+        	    	
+        	    	ok._2 match {
+        	    	  case sir: SingleIntRecord =>
+        	    	    println("OOOOK "+sir.prova)
+        	    	  case any =>
+        	    	    println("azz è un any")
+        	    	}
+        	    	
+        	    	end.trySuccess(true)
+        	  case Failure(err) =>
+        	    	println("err2 "+err)
+        	}
+        	
       case Failure(err) => 
         	println(err)
         	end.trySuccess(false)

@@ -60,35 +60,40 @@ object AerospikeValue {
   }
   */
    
-  implicit object AerospikeNullRW extends AerospikeValueConverter[Null] {
+  implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
     def toAsV(n: Null): AerospikeNull = AerospikeNull()
     def fromValue(vi: Value): AerospikeNull = AerospikeNull() 
   }
 
-  implicit object AerospikeLongRW extends AerospikeValueConverter[Long] {
+  implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
     def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
     def fromValue(vi: Value): AerospikeLong = AerospikeLong(vi.toLong()) 
   }
   
-  implicit object AerospikeIntRW extends AerospikeValueConverter[Int] {
+  implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
     def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
     def fromValue(vi: Value): AerospikeInt = AerospikeInt(vi.toInteger()) 
   }
   
-  implicit object AerospikeStringRW extends AerospikeValueConverter[String] {
+  implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
     def toAsV(s: String): AerospikeString = AerospikeString(s)
     def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
   }
   
+  /*
   def apply[T](x: T)
   			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
 	  conv.toAsV(x)
   }
-  
+  */
   def apply[T <: Any]
 		  	(x: Value)
   			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
 	  conv.fromValue(x)
+  }
+  
+  def apply[T](x: Object, conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
+	  conv.toAsV(x.asInstanceOf[T])
   }
   
   case class AerospikeNull()

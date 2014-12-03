@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
 
 import eu.unicredit.reactive_aerospike.listener._
 import eu.unicredit.reactive_aerospike.data._
+import AerospikeRecord._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -25,17 +26,17 @@ case class AerospikeClient
 	// Write Record Operations
 	//-------------------------------------------------------
 	
-    def put[T](key: AerospikeKey[T], bins: AerospikeBin[_]*)
-			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[T]] = {
+    def put[K](key: AerospikeKey[K], bins: AerospikeBin[_]*)
+			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
 	  	val wl = AerospikeWriteListener()(key.converter)
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
 		wl.result.map(_.key)
 	}
   
-   def put[T](key: AerospikeKey[T], record: AerospikeRecord)
-   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[T]] = {
+   def put[K](key: AerospikeKey[K], record: AerospikeRecord)
+   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
 		val wl = AerospikeWriteListener()(key.converter)
-		super.put(wpolicy, wl, key.inner, record.bins.map(_.inner):_*)
+		super.put(wpolicy, wl, key.inner, record.getBins.map(_.inner):_*)
 		wl.result.map(_.key)
   	}
   
@@ -51,11 +52,14 @@ case class AerospikeClient
 		AsyncRead command = new AsyncRead(cluster, policy, listener, key, null);
 		command.execute();
 	}*/
-   /*
-   def get(key: AerospikeKey[_])
-   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[AerospikeKey[_]] = {
-     val rl = AerospikeReadListener()
-     
+   
+   def get[AR <: AerospikeRecord](key: AerospikeKey[_])
+   			(implicit rpolicy: Policy = policy.readPolicyDefault,
+   			 recordReader: AerospikeRecordConverter[AR])/*: Future[AerospikeKey[_]]*/ = {
+     implicit val keyConverter = key.converter 
+     val rl = AerospikeReadListener[AR]()
+     super.get(rpolicy,rl,key.inner)
+     rl.result.map(x => (x.key , x.record))
    }
-  */ 
+ 
 }

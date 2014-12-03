@@ -1,7 +1,7 @@
 package eu.unicredit.reactive_aerospike
 
 import com.aerospike.client.{ Bin, Key }
-import data.AerospikeValue.AerospikeValueConverter
+import data.AerospikeValue._
 
 package object data {
 
@@ -11,12 +11,12 @@ package object data {
     AerospikeValue.AerospikeNull()
 
   implicit def fromStringToAS(s: String) =
-    AerospikeValue(s)(AerospikeValue.AerospikeStringRW)
+    AerospikeString(s)
 
   implicit def fromIntToAS(i: Int) =
-    AerospikeValue(i.toLong)(AerospikeValue.AerospikeLongRW)
+    AerospikeInt(i.toInt)
   implicit def fromLongToAS(l: Long) =
-    AerospikeValue(l)(AerospikeValue.AerospikeLongRW)
+    AerospikeLong(l)
 
   //From and to Bin
   implicit def fromTupleToBin[T <: Any](t: (String, T))
