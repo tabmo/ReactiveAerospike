@@ -1,14 +1,14 @@
 package eu.unicredit.reactive_aerospike.test
 
-import eu.unicredit.reactive_aerospike.client._
+//import eu.unicredit.reactive_aerospike.client._
 import eu.unicredit.reactive_aerospike.data._
-import eu.unicredit.reactive_aerospike.data.AerospikeRecord.Defaults._
+//import eu.unicredit.reactive_aerospike.data.AerospikeRecord.Defaults._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
 import scala.concurrent._
 import scala.concurrent.duration._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-import eu.unicredit.reactive_aerospike.data.AerospikeRecord._
+//import eu.unicredit.reactive_aerospike.data.AerospikeRecord._
 
 object Test extends App {
 
@@ -27,16 +27,16 @@ object Test extends App {
   val key = AerospikeKey("test", "demoRecord2", "12345")
   //val bin: AerospikeBin[Int] = ("prova" -> 1234)
   
-  val record = SingleIntRecord(1234)
-  
-  
+ // val record = SingleIntRecord(1234)
+  val record = MyRecord(1,"ciao")
+  /*
   val record2 =
     IntStringLongRecord(
         1234,
         "CIAO!",
         123456789L
         )
-       
+    */   
   /*
   bin.value match {
     case int: AerospikeInt =>
@@ -84,7 +84,7 @@ object Test extends App {
   */
   //client.put(null, key, bin)
   //val prova = client.get(null, key)
-
+/*
   client.delete(null, key.inner)
  Thread.sleep(2000)
    client.put(key, record2).onComplete{
@@ -116,8 +116,9 @@ object Test extends App {
         	println("ERRORE!!!! "+err)
         	end.trySuccess(false)
   }
-
- /* this works
+*/
+ /* this works*/
+  
     println("--> ")
  client.delete(null, key.inner)
  Thread.sleep(2000)
@@ -136,8 +137,8 @@ object Test extends App {
         	    				" ")
         	    	
         	    	ok._2 match {
-        	    	  case sir: SingleIntRecord =>
-        	    	    println("OOOOK "+sir.prova)
+        	    	  case sir: MyRecord =>
+        	    	    println("OOOOK ")
         	    	  case any =>
         	    	    println("azz è un any")
         	    	}
@@ -152,7 +153,7 @@ object Test extends App {
         	println(err)
         	end.trySuccess(false)
   }
-  */ 
+  
   /*
   for {
 	  ret <- client.put(key, bin)
@@ -171,7 +172,7 @@ object Test extends App {
   } yield {
     println("Closing client")
     Thread.sleep(3000)
-    client.close()
+    //client.close()
   }
   
   val ended = Await.result(end.future, 5 seconds)

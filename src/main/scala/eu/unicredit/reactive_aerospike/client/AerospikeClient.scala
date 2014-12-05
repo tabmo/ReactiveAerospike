@@ -8,7 +8,6 @@ import scala.collection.JavaConverters._
 
 import eu.unicredit.reactive_aerospike.listener._
 import eu.unicredit.reactive_aerospike.data._
-import AerospikeRecord._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

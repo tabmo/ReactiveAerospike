@@ -4,7 +4,6 @@ import com.aerospike.client.{AerospikeException, Key,Record}
 import com.aerospike.client.listener.{WriteListener, RecordListener}
 import scala.concurrent.Promise
 import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeValue, AerospikeRecord}
-import AerospikeRecord.AerospikeRecordConverter
 import AerospikeValue.AerospikeValueConverter
 import scala.language.existentials
 
