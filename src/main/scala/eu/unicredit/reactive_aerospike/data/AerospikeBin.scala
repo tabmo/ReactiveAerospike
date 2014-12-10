@@ -32,7 +32,7 @@ object AerospikeBin {
    */		  
   def apply[T <: Any](tuple: (String, Object),
 		  converter: AerospikeValueConverter[T]): AerospikeBin[T] =
-		  AerospikeBin(tuple._1, AerospikeValue(tuple._2, converter), converter)		  
+		  AerospikeBin(tuple._1, AerospikeValue(Value.get(tuple._2))(converter), converter)		  
 /*		  
   def apply[T <: Any](tuple: (String, Value))
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =

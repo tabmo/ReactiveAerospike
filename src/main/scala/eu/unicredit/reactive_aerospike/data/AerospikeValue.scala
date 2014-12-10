@@ -43,8 +43,82 @@ object AerospikeValue {
     def toAsV(x: T): AerospikeValue[T]
     def fromValue(x: Value): AerospikeValue[T]
   }
-
+  
+  case class AerospikeNull()
+      extends AerospikeValue[Null] {
+    override val inner = new NullValue
+  }
+  
+  implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
+    def toAsV(n: Null): AerospikeNull = AerospikeNull()
+    def fromValue(vi: Value): AerospikeNull = AerospikeNull() 
+  }
+  
+  case class AerospikeInt(i: Int)
+      extends AerospikeValue[Int] {
+    override val inner = new LongValue(i)
+  }
+  
+  implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
+    def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
+    def fromValue(vi: Value): AerospikeInt = AerospikeInt(vi.toInteger()) 
+  }
+  
+  case class AerospikeLong(l: Long)
+  	  extends AerospikeValue[Long] {
+    override val inner = new LongValue(l)
+  }
+  
+  implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
+    def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
+    def fromValue(vi: Value): AerospikeLong = AerospikeLong(vi.toLong()) 
+  }
+  
+  case class AerospikeDouble(d: Double)
+  	  extends AerospikeValue[Double] {
+    override val inner = new LongValue(java.lang.Double.doubleToLongBits(d))
+    
+    override def toString() =
+    	d.toString
+  }
+  
+  implicit object AerospikeDoubleReader extends AerospikeValueConverter[Double] {
+    def toAsV(d: Double): AerospikeDouble = AerospikeDouble(d)
+    def fromValue(vd: Value): AerospikeDouble = AerospikeDouble(java.lang.Double.longBitsToDouble(vd.toLong())) 
+  }
+  
+  case class AerospikeString(s: String)
+      extends AerospikeValue[String] {
+    override val inner = new StringValue(s)
+  }
+  
+  implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
+    def toAsV(s: String): AerospikeString = AerospikeString(s)
+    def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
+  }
+  
+  case class AerospikeBlob(b: Array[Byte])
+      extends AerospikeValue[String] {
+    override val inner = new BlobValue(b)
+  }
+  
+  implicit object AerospikeBlobReader extends AerospikeValueConverter[Array[Byte]] {
+    def toAsV(ab: Array[Byte]): AerospikeBlob = AerospikeBlob(ab)
+    def fromValue(vb: Value): AerospikeBlob = AerospikeBlob(vb.getObject().asInstanceOf[Array[Byte]])  
+  }
+  
+  def apply[T <: Any]
+		  	(x: Value)
+  			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
+	  conv.fromValue(x)
+  }
+  
   /*
+  def apply[T](x: Object, conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
+	  conv.toAsV(x.asInstanceOf[T])
+  }
+   */
+  /* now using implicit converters
   def apply(x: Any): AerospikeValue[_] = {
     if (x == null) AerospikeNull()
     else
@@ -59,26 +133,6 @@ object AerospikeValue {
       }
   }
   */
-   
-  implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
-    def toAsV(n: Null): AerospikeNull = AerospikeNull()
-    def fromValue(vi: Value): AerospikeNull = AerospikeNull() 
-  }
-
-  implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
-    def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
-    def fromValue(vi: Value): AerospikeLong = AerospikeLong(vi.toLong()) 
-  }
-  
-  implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
-    def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
-    def fromValue(vi: Value): AerospikeInt = AerospikeInt(vi.toInteger()) 
-  }
-  
-  implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
-    def toAsV(s: String): AerospikeString = AerospikeString(s)
-    def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
-  }
   
   /*
   def apply[T](x: T)
@@ -86,40 +140,12 @@ object AerospikeValue {
 	  conv.toAsV(x)
   }
   */
-  def apply[T <: Any]
-		  	(x: Value)
-  			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
-	  conv.fromValue(x)
-  }
   
-  def apply[T](x: Object, conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
-	  conv.toAsV(x.asInstanceOf[T])
-  }
-  
-  case class AerospikeNull()
-      extends AerospikeValue[Null] {
-    override val inner = new NullValue
-  }
   //  implicit def fromObjectToNull(o: java.lang.Object) =
   //    AerospikeNull
 
-  case class AerospikeString(s: String)
-      extends AerospikeValue[String] {
-    override val inner = new StringValue(s)
-  }
-
   //  implicit def fromObjectToString(o: java.lang.Object) =
   //    AerospikeString(o.asInstanceOf[String])
-  
-  case class AerospikeLong(l: Long)
-  	  extends AerospikeValue[Long] {
-    override val inner = new LongValue(l)
-  }
-  
-  case class AerospikeInt(i: Int)
-      extends AerospikeValue[Int] {
-    override val inner = new LongValue(i)
-  }
 
   //  implicit def fromObjectToInteger(o: java.lang.Object) =
   //    AerospikeInteger(o.asInstanceOf[Long])
