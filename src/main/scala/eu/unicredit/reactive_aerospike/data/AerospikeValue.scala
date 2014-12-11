@@ -4,6 +4,7 @@ import com.aerospike.client.Value
 import com.aerospike.client.Value._
 import com.aerospike.client.util.Packer
 import com.aerospike.client.lua.LuaInstance
+import scala.collection.JavaConverters._
 
 trait AerospikeValue[+T <: Any] extends Value {
   val inner: Value
@@ -98,13 +99,41 @@ object AerospikeValue {
   }
   
   case class AerospikeBlob(b: Array[Byte])
-      extends AerospikeValue[String] {
+      extends AerospikeValue[Array[Byte]] {
     override val inner = new BlobValue(b)
   }
   
   implicit object AerospikeBlobReader extends AerospikeValueConverter[Array[Byte]] {
     def toAsV(ab: Array[Byte]): AerospikeBlob = AerospikeBlob(ab)
     def fromValue(vb: Value): AerospikeBlob = AerospikeBlob(vb.getObject().asInstanceOf[Array[Byte]])  
+  }
+  
+  case class AerospikeList[+T <: Any](l: List[AerospikeValue[T]])
+      extends AerospikeValue[List[AerospikeValue[T]]] {
+    override val inner = new ListValue(l.asJava)
+  }
+  
+  implicit def listReader[T <: Any](implicit reader: AerospikeValueConverter[T]) = {
+	AerospikeListReader[T]()
+  }
+  
+  case class AerospikeListReader[T <: Any](implicit reader: AerospikeValueConverter[T]) extends AerospikeValueConverter[List[AerospikeValue[T]]] {
+    def toAsV(l: List[AerospikeValue[T]]): AerospikeList[T] = 
+      AerospikeList(l)
+    def fromValue(vl: Value): AerospikeList[T] = {
+      try {
+    	  val listRaw =
+    		vl.getObject() match {
+    	    	case _listRaw: java.util.List[_] => _listRaw.asScala.toList
+    	    	case _ => throw new Exception("Data is not a list")
+    	  }
+    	  val result = listRaw.map(elem => reader.fromValue(Value.get(elem))) 	  
+    	  AerospikeList(result)
+      } catch {
+        case err: Throwable => 
+          	throw new Exception("Cannot parse list element")
+      }
+    }
   }
   
   def apply[T <: Any]

@@ -13,17 +13,23 @@ object NewTest extends App {
   
   val client = new AerospikeClient("localhost", 3000)
   
-  val key = AerospikeKey("test", "demoRecord2", "12345")
+  val key = AerospikeKey("test", "demoRecord2", "123456")
   
   val bin1 = AerospikeBin("uno", 1.9)
   val bin2 = AerospikeBin("due", "due")
   
-  val bins = Seq(bin1,bin2)
+  //to add a bit of syntactic sugar...
+  val lista = AerospikeList[Int](List(1,2,3))
+  val bin3 = AerospikeBin("tre", 
+  	  			lista, listReader[Int])
+  
+  val bins = Seq(bin1,bin2, bin3)
   
   //val reader = AerospikeRecordReader(bins)
   val reader = new AerospikeRecordReader(
-      Map(("uno" -> AerospikeDoubleReader)//,
-          //("due" -> AerospikeStringReader)
+      Map(("uno" -> AerospikeDoubleReader),
+          //("due" -> AerospikeStringReader),
+          ("tre" -> listReader[Int])
           )
       )
   
