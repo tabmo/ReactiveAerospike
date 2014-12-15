@@ -19,9 +19,12 @@ object NewTest extends App {
   val bin2 = AerospikeBin("due", "due")
   
   //to add a bit of syntactic sugar...
-  val lista = AerospikeList[Int](List(1,2,3))
-  val bin3 = AerospikeBin("tre", 
-  	  			lista, listReader[Int])
+  val lista = AerospikeList(1.2,2.5,3.6)
+  
+  //implicit val doubleListReader = listReader[Double]
+  
+  val bin3 = AerospikeBin("tre", lista)
+  	  			//lista, listReader[Double])
   
   val bins = Seq(bin1,bin2, bin3)
   
@@ -29,7 +32,7 @@ object NewTest extends App {
   val reader = new AerospikeRecordReader(
       Map(("uno" -> AerospikeDoubleReader),
           //("due" -> AerospikeStringReader),
-          ("tre" -> listReader[Int])
+          ("tre" -> listReader[Double])
           )
       )
   

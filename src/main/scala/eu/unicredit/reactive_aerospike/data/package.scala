@@ -17,6 +17,9 @@ package object data {
     AerospikeInt(i.toInt)
   implicit def fromLongToAS(l: Long) =
     AerospikeLong(l)
+  implicit def fromDoubleToAS(d: Double) =
+    AerospikeDouble(d)  
+    
 
   //From and to Bin
   /*

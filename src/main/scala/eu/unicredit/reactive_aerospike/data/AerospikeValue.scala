@@ -111,13 +111,23 @@ object AerospikeValue {
   case class AerospikeList[+T <: Any](l: List[AerospikeValue[T]])
       extends AerospikeValue[List[AerospikeValue[T]]] {
     override val inner = new ListValue(l.asJava)
+    
+    def this(elems: AerospikeValue[T]*) =
+      	this(elems.toList)
+  }
+  
+  /* helper constructor */
+  object AerospikeList {
+    def apply[T <: Any](values : AerospikeValue[T]*): AerospikeList[T] =
+      AerospikeList(values.toList)
   }
   
   implicit def listReader[T <: Any](implicit reader: AerospikeValueConverter[T]) = {
 	AerospikeListReader[T]()
   }
   
-  case class AerospikeListReader[T <: Any](implicit reader: AerospikeValueConverter[T]) extends AerospikeValueConverter[List[AerospikeValue[T]]] {
+  case class AerospikeListReader[T <: Any](implicit reader: AerospikeValueConverter[T]) 
+  	extends AerospikeValueConverter[List[AerospikeValue[T]]] {
     def toAsV(l: List[AerospikeValue[T]]): AerospikeList[T] = 
       AerospikeList(l)
     def fromValue(vl: Value): AerospikeList[T] = {

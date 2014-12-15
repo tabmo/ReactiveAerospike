@@ -1,7 +1,7 @@
 package eu.unicredit.reactive_aerospike.data
 
 import com.aerospike.client.{Bin, Value}
-import AerospikeValue.AerospikeValueConverter
+import AerospikeValue.{AerospikeValueConverter, AerospikeList}
 
 case class AerospikeBin[T <: Any]
 				(name: String, value: AerospikeValue[T],
@@ -23,6 +23,12 @@ object AerospikeBin {
   def apply[T <: Any](name: String, value: T)
   	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
     AerospikeBin(name, converter.toAsV(value), converter)
+  }
+
+  def apply[T <: Any](name: String, value: AerospikeList[T])
+  	(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
+    implicit val listConverter = AerospikeValue.listReader[T]
+    AerospikeBin(name, value, converter)
   }
 
   /*
