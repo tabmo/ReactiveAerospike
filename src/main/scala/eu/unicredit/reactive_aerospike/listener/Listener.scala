@@ -1,7 +1,7 @@
 package eu.unicredit.reactive_aerospike.listener
 
 import com.aerospike.client.{AerospikeException, Key,Record}
-import com.aerospike.client.listener.{WriteListener, RecordListener}
+import com.aerospike.client.listener.{WriteListener, RecordListener, DeleteListener, ExistsListener}
 import scala.concurrent.Promise
 import eu.unicredit.reactive_aerospike.data._
 import AerospikeValue.AerospikeValueConverter
@@ -14,14 +14,15 @@ trait Listener[T <: CommandResult] {
 
 class CommandResult() {}
 case class AerospikeWriteReturn[T <: Any](key: AerospikeKey[T]) extends CommandResult
-//case class AerospikeDeleteReturn(key: Key, existed: Boolean) extends CommandResult 
-//case class AerospikeExistsReturn(key: Key, existed: Boolean) extends CommandResult
+case class AerospikeDeleteReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean]) extends CommandResult 
+case class AerospikeExistsReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean]) extends CommandResult
 case class AerospikeReadReturn[T <: Any](
 		key: AerospikeKey[_], record: AerospikeRecord)
 		(implicit recordReader: AerospikeRecordReader) extends CommandResult
 
 
-case class AerospikeWriteListener[T <: Any]()(implicit converter: AerospikeValueConverter[T]) 
+case class AerospikeWriteListener[T <: Any]()
+				(implicit converter: AerospikeValueConverter[T]) 
 				extends WriteListener 
 				with Listener[AerospikeWriteReturn[T]] {
   	def onSuccess(key: Key) = {
@@ -34,8 +35,36 @@ case class AerospikeWriteListener[T <: Any]()(implicit converter: AerospikeValue
   	  promise.failure(exception)
 	}
 }
-//case class ExistsListener() extends Listener[ExistsReturn] {}
-//case class DeleteListener() extends Listener[DeleteReturn] {}
+
+case class AerospikeDeleteListener[T <: Any]()
+		(implicit converter: AerospikeValueConverter[T])
+		extends DeleteListener
+		with Listener[AerospikeDeleteReturn[T]] {
+    def onSuccess(key: Key, existed: Boolean) = {
+  	  promise.success(
+  	      AerospikeDeleteReturn((
+  			  AerospikeKey(key), existed)))
+  	}
+	
+	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}
+
+case class AerospikeExistsListener[T <: Any]()
+		(implicit converter: AerospikeValueConverter[T])
+		extends DeleteListener
+		with Listener[AerospikeDeleteReturn[T]] {
+    def onSuccess(key: Key, existed: Boolean) = {
+  	  promise.success(
+  	      AerospikeDeleteReturn((
+  			  AerospikeKey(key), existed)))
+  	}
+	
+	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}
 
 case class AerospikeReadListener[T <: Any](converter: AerospikeRecordReader)
 			(implicit
