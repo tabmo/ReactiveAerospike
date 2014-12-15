@@ -97,7 +97,7 @@ object AerospikeValue {
     def toAsV(s: String): AerospikeString = AerospikeString(s)
     def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
   }
-  
+   
   case class AerospikeBlob(b: Array[Byte])
       extends AerospikeValue[Array[Byte]] {
     override val inner = new BlobValue(b)
@@ -141,73 +141,82 @@ object AerospikeValue {
     	  AerospikeList(result)
       } catch {
         case err: Throwable => 
-          	throw new Exception("Cannot parse list element")
+          	throw new Exception(s"Cannot parse list element ${vl.toString}")
       }
     }
   }
   
+  case class AerospikeMap[T1 <: Any, T2 <: Any](m: Map[AerospikeValue[T1], AerospikeValue[T2]])
+      extends AerospikeValue[Map[AerospikeValue[T1],AerospikeValue[T2]]] {
+    override val inner = new MapValue(m.asJava)
+  }
+  
+  object AerospikeMap {
+    def apply[T1 <: Any, T2 <: Any](values : Tuple2[AerospikeValue[T1],AerospikeValue[T2]]*): AerospikeMap[T1,T2] =
+      AerospikeMap(values.toMap)
+    def apply[T1 <: Any, T2 <: Any](values : Tuple2[T1,T2]*)(
+        implicit converter1: AerospikeValueConverter[T1],
+        		 converter2: AerospikeValueConverter[T2]
+        ): AerospikeMap[T1,T2] =
+      AerospikeMap(values.map(x => converter1.toAsV(x._1) -> converter2.toAsV(x._2)).toMap)      
+  }
+
+  implicit def mapReader[T1 <: Any, T2 <: Any]
+		  (implicit reader1: AerospikeValueConverter[T1],
+				  	reader2: AerospikeValueConverter[T2]
+		      ) = {
+	AerospikeMapReader[T1,T2]()
+  }
+  
+  /*
+   * TUPLE IS ONLY FOR INTERNAL USE
+   */
+  sealed class AerospikeTuple[T1 <: Any, T2 <: Any](x1: T1, x2: T2)
+  	  extends AerospikeValue[Tuple2[T1,T2]] {
+    override val inner =  new NullValue
+    
+    val key = x1
+    val value = x2
+  }
+  
+  sealed class AerospikeTupleReader[T1 <: Any,T2 <: Any]
+		  	(implicit reader1: AerospikeValueConverter[T1],
+		  			  reader2: AerospikeValueConverter[T2]) 
+  	extends AerospikeValueConverter[Tuple2[T1,T2]] {
+    def toAsV(t: Tuple2[T1,T2]): AerospikeTuple[T1,T2] = 
+      new AerospikeTuple(t._1,t._2)
+    def fromValue(vb: Value): AerospikeTuple[T1,T2] =
+      throw new Exception("Please parse separately key and value")
+  }  
+  
+  
+  case class AerospikeMapReader[T1 <: Any,T2 <: Any]
+		  (implicit reader1: AerospikeValueConverter[T1],
+				  	reader2: AerospikeValueConverter[T2]) 
+  	extends AerospikeValueConverter[Map[AerospikeValue[T1], AerospikeValue[T2]]] {
+    def toAsV(m: Map[AerospikeValue[T1],AerospikeValue[T2]]): AerospikeMap[T1,T2] = 
+      AerospikeMap(m)
+    def fromValue(vm: Value): AerospikeMap[T1,T2] = {
+      try {
+    	  val mapRaw =
+    		vm.getObject() match {
+    	    	case _mapRaw: java.util.Map[_,_] => _mapRaw.asScala.toMap
+    	    	case _ => throw new Exception("Data is not a map")
+    	  }
+    	  val result = mapRaw.map(elem => 
+    	    (reader1.fromValue(Value.get(elem._1)) -> reader2.fromValue(Value.get(elem._2)))).toMap 	  
+    	  AerospikeMap(result)
+      } catch {
+        case err: Throwable => 
+          	throw new Exception(s"Cannot parse map element ${vm.toString}")
+      }
+    }
+  }  
+
   def apply[T <: Any]
 		  	(x: Value)
   			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
 	  conv.fromValue(x)
   }
-  
-  /*
-  def apply[T](x: Object, conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
-	  conv.toAsV(x.asInstanceOf[T])
-  }
-   */
-  /* now using implicit converters
-  def apply(x: Any): AerospikeValue[_] = {
-    if (x == null) AerospikeNull()
-    else
-      x match {
-      	case av: AerospikeValue[_] => av
-        case s: String => AerospikeString(s)
-        case i: Int => AerospikeInteger(i)
-        case l: Long => AerospikeInteger(l)
-        case any =>
-          	println(s"Default match not found! ${any} ${any.getClass}")
-          	AerospikeNull()
-      }
-  }
-  */
-  
-  /*
-  def apply[T](x: T)
-  			(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
-	  conv.toAsV(x)
-  }
-  */
-  
-  //  implicit def fromObjectToNull(o: java.lang.Object) =
-  //    AerospikeNull
-
-  //  implicit def fromObjectToString(o: java.lang.Object) =
-  //    AerospikeString(o.asInstanceOf[String])
-
-  //  implicit def fromObjectToInteger(o: java.lang.Object) =
-  //    AerospikeInteger(o.asInstanceOf[Long])
-
-  /*
-  //da qui in avanti implementazioni parziali da finire
-
-  case class AerospikeBlob(ba: Array[Byte])
-      extends AerospikeValue[Array[Byte]] {
-    def toNative = ba
-  }
-
-  implicit def fromObjectToBlob(o: java.lang.Object) =
-    AerospikeBlob(o.asInstanceOf[Array[Byte]])
-
-  case class AerospikeMap[T <: AerospikeValue[T]](m: Map[String, T])
-      extends AerospikeValue[Map[String, T]] {
-    def toNative = m.map(x => (x._1 -> x._2.toNative))
-  }
-
-  case class AerospikeList[T <: AerospikeValue[T]](l: List[T])
-      extends AerospikeValue[List[T]] {
-    def toNative = l.map(_.toNative)
-  }
-*/
+ 
 }

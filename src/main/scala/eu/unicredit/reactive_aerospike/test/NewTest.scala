@@ -21,23 +21,47 @@ object NewTest extends App {
   //to add a bit of syntactic sugar...
   val lista = AerospikeList(1.2,2.5,3.6)
   
+  
+  val intList1 = AerospikeList(1,2,3)
+  val intList2 = AerospikeList(4,5,6)
+  
+  val lista2 = AerospikeList(intList1,intList2)
+  
   //implicit val doubleListReader = listReader[Double]
   
   val bin3 = AerospikeBin("tre", lista)
   	  			//lista, listReader[Double])
   
-  val bins = Seq(bin1,bin2, bin3)
+  val bin4 = AerospikeBin("quattro", lista2)
+  
+  
+  val mappa = AerospikeMap(
+		  ("uno" -> 1),
+		  ("due" -> 2)
+      )
+     
+  val bin5 = AerospikeBin("cinque", mappa)//, mapReader[String,Int])
+  
+  val bins = Seq(
+		  		bin1,
+		  		bin2,
+		  		bin3,
+		  		bin4,
+		  		bin5
+		  	 )
   
   //val reader = AerospikeRecordReader(bins)
   val reader = new AerospikeRecordReader(
       Map(("uno" -> AerospikeDoubleReader),
           //("due" -> AerospikeStringReader),
-          ("tre" -> listReader[Double])
+          ("tre" -> listReader[Double]),
+          ("quattro" -> listReader(AerospikeListReader[Int]())),
+          ("cinque" -> mapReader[String,Int])
           )
       )
   
   val putted = client.put(key, bins)
-    
+
   for {
     puttedKey <- putted
   } yield {
@@ -59,6 +83,5 @@ object NewTest extends App {
 
   }
 
-  
   println("End")
 }

@@ -36,7 +36,4 @@ object AerospikeKey {
       converter
       )
 
-//  implicit def fromAKToK(ak: AerospikeKey[_]): Key =
-//    ak.inner
-
 }

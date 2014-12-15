@@ -31,26 +31,10 @@ case class AerospikeClient
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
 		wl.result.map(_.key)
 	}
-  
-/*   def put[K](key: AerospikeKey[K], record: AerospikeRecord)
-   			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
-		val wl = AerospikeWriteListener()(key.converter)
-		super.put(wpolicy, wl, key.inner, record.getBins.map(_.inner):_*)
-		wl.result.map(_.key)
-  	}
-*/  
+   
    	//-------------------------------------------------------
 	// Read Record Operations
 	//-------------------------------------------------------
-   
-   /*
-   public final void get(Policy policy, RecordListener listener, Key key) throws AerospikeException {
-		if (policy == null) {
-			policy = readPolicyDefault;
-		}
-		AsyncRead command = new AsyncRead(cluster, policy, listener, key, null);
-		command.execute();
-	}*/
   def get(key: AerospikeKey[_], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
      implicit val keyConverter = key.converter 
