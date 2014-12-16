@@ -10,7 +10,10 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 
 object NewTest extends App {
   println("Flattened everything a bit")  
-  val client = new AerospikeClient("localhost", 3000)
+  
+  //val client = new AerospikeClient("localhost", 3000)
+  val client = new AerospikeClient("localhost", 3000, 
+      eu.unicredit.reactive_aerospike.future.TwitterFactory)
   
   val key = AerospikeKey("test", "demoRecord2", "123456")
   
@@ -62,8 +65,10 @@ object NewTest extends App {
   Thread.sleep(5000)
   System.exit(0)
   */
-  import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
-  import scala.concurrent._
+  //import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+  //import scala.concurrent._
+  import eu.unicredit.reactive_aerospike.future.TwitterFactory.Helpers._
+  import com.twitter.util._
   
   val putted = client.put(key, bins)
 
@@ -73,6 +78,7 @@ object NewTest extends App {
     println(s"element putted $puttedKey")
     
     val result = client.get(puttedKey, reader)
+    /*
     client.get(puttedKey, reader).onComplete{
       case Success(getted) =>
          val binsR = getted._2
@@ -87,8 +93,22 @@ object NewTest extends App {
       	err.printStackTrace()
         client.close()
     }
-
-   
+     */
+    val g = client.get(key, reader)
+    g.onSuccess{ getted =>
+         val binsR = getted._2
+        
+         binsR.getBins.foreach(bin =>
+          println(s" ${bin.name} ${bin.value.getClass()} ${bin.value} ")
+         )
+       	println("OK")
+        client.close()
+    }
+    g.onFailure{err =>
+      	println("ERROR")
+      	err.printStackTrace()
+        client.close()
+    }
 	
   }
 

@@ -17,7 +17,8 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-	  "com.aerospike" % "aerospike-client" % "3.0.32"
+	  "com.aerospike" % "aerospike-client" % "3.0.32",
+	  "com.twitter" %% "util-collection" % "6.23.0"  
 )
 
 resolvers ++= Seq(

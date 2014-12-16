@@ -41,6 +41,9 @@ class AerospikeClient(hosts: Host*)
 		   executionContext: ExecutionContext,
 		   factory: Factory) =
     this(new Host(hostname, port))(executionContext = executionContext, factory = factory)   
+  def this(hostname: String, port: Int, 
+		   factory: Factory) =
+    this(new Host(hostname, port))(factory = factory)   
     
     
 
