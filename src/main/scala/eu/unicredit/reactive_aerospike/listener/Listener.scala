@@ -2,29 +2,46 @@ package eu.unicredit.reactive_aerospike.listener
 
 import com.aerospike.client.{AerospikeException, Key,Record}
 import com.aerospike.client.listener.{WriteListener, RecordListener, DeleteListener, ExistsListener}
-import scala.concurrent.Promise
+import eu.unicredit.reactive_aerospike.future.{Promise, Future, Factory}
 import eu.unicredit.reactive_aerospike.data._
 import AerospikeValue.AerospikeValueConverter
 import scala.language.existentials
 
-trait Listener[T <: CommandResult] {
-  val promise: Promise[T] = Promise[T]
-  val result = promise.future
+class Listener[T <: CommandResult](factory: Factory) { 
+  val promise: Promise[T] =
+  	if (factory == null) 
+  		throw new Exception("Please explicitly define your implicit Future Factory")
+  	else factory.newPromise
+  val result: Future[T] = promise.future
 }
 
-class CommandResult() {}
-case class AerospikeWriteReturn[T <: Any](key: AerospikeKey[T]) extends CommandResult
-case class AerospikeDeleteReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean]) extends CommandResult 
-case class AerospikeExistsReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean]) extends CommandResult
+
+class CommandResult(implicit factory: Factory) {}
+case class AerospikeWriteReturn[T <: Any]
+		(key: AerospikeKey[T])
+		(implicit factory: Factory) 
+		extends CommandResult()
+case class AerospikeDeleteReturn[T <: Any]
+		(key_existed: Tuple2[AerospikeKey[T], Boolean])
+		(implicit factory: Factory)
+		extends CommandResult 
+case class AerospikeExistsReturn[T <: Any]
+		(key_existed: Tuple2[AerospikeKey[T], Boolean])
+		(implicit factory: Factory)
+		extends CommandResult
 case class AerospikeReadReturn[T <: Any](
-		key: AerospikeKey[_], record: AerospikeRecord)
-		(implicit recordReader: AerospikeRecordReader) extends CommandResult
+		key_record: Tuple2[AerospikeKey[_], AerospikeRecord])
+		(implicit recordReader: AerospikeRecordReader,
+				  factory: Factory) 
+		extends CommandResult
 
 
 case class AerospikeWriteListener[T <: Any]()
-				(implicit converter: AerospikeValueConverter[T]) 
-				extends WriteListener 
-				with Listener[AerospikeWriteReturn[T]] {
+				(implicit converter: AerospikeValueConverter[T],
+						  factory: Factory) 
+				extends Listener[AerospikeWriteReturn[T]](factory) 
+				with WriteListener {
+  
   	def onSuccess(key: Key) = {
   	  promise.success(
   	      AerospikeWriteReturn(
@@ -37,9 +54,10 @@ case class AerospikeWriteListener[T <: Any]()
 }
 
 case class AerospikeDeleteListener[T <: Any]()
-		(implicit converter: AerospikeValueConverter[T])
-		extends DeleteListener
-		with Listener[AerospikeDeleteReturn[T]] {
+		(implicit converter: AerospikeValueConverter[T],
+				  factory: Factory)
+		extends Listener[AerospikeDeleteReturn[T]](factory) 
+		with DeleteListener {
     def onSuccess(key: Key, existed: Boolean) = {
   	  promise.success(
   	      AerospikeDeleteReturn((
@@ -52,9 +70,10 @@ case class AerospikeDeleteListener[T <: Any]()
 }
 
 case class AerospikeExistsListener[T <: Any]()
-		(implicit converter: AerospikeValueConverter[T])
-		extends DeleteListener
-		with Listener[AerospikeDeleteReturn[T]] {
+		(implicit converter: AerospikeValueConverter[T],
+				  factory: Factory)
+		extends Listener[AerospikeDeleteReturn[T]](factory)
+		with ExistsListener{
     def onSuccess(key: Key, existed: Boolean) = {
   	  promise.success(
   	      AerospikeDeleteReturn((
@@ -66,11 +85,13 @@ case class AerospikeExistsListener[T <: Any]()
 	}
 }
 
-case class AerospikeReadListener[T <: Any](converter: AerospikeRecordReader)
+case class AerospikeReadListener[T <: Any]
+			(converter: AerospikeRecordReader)
 			(implicit
-			    keyConverter: AerospikeValueConverter[_]) 
-				extends RecordListener 
-				with Listener[AerospikeReadReturn[T]] {
+			    keyConverter: AerospikeValueConverter[_],
+			    factory: Factory)
+			extends Listener[AerospikeReadReturn[T]](factory)
+			with RecordListener {
 	implicit val conv = converter 
   
 	def onSuccess(key: Key, record: Record) = {

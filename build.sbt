@@ -4,7 +4,9 @@ version := "0.1.1-SNAPSHOT"
 
 organization := "eu.unicredit"
 
-crossScalaVersions := Seq("2.9.2", "2.10.4")
+scalaVersion := "2.11.4"
+
+crossScalaVersions := Seq("2.9.2", "2.11.4")
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -15,9 +17,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-	  "org.luaj" % "luaj-jse" % "3.0",
-	  "org.gnu" % "gnu-crypto" % "2.0.1",
-	  "org.mindrot" % "jbcrypt" % "0.3m"
+	  "com.aerospike" % "aerospike-client" % "3.0.32"
 )
 
 resolvers ++= Seq(

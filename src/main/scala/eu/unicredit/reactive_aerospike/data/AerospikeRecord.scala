@@ -19,7 +19,6 @@ class AerospikeRecord(
   val inner =
     new Record(
       toRecordBins.toMap.asJava,
-      null,	//TBD duplicates
       generation,
       expiration
     )

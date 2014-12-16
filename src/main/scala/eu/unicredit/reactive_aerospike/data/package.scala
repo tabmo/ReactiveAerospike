@@ -19,7 +19,9 @@ package object data {
     AerospikeLong(l)
   implicit def fromDoubleToAS(d: Double) =
     AerospikeDouble(d)  
-    
+/*  implicit def fromListToAS[T <: Any](l: List[T]) =
+    AerospikeList(l.map(x => AerospikeValue(x)))  
+*/    
 
   //From and to Bin
   /*
