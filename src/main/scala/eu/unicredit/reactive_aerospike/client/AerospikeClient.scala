@@ -3,14 +3,13 @@ package eu.unicredit.reactive_aerospike.client
 import com.aerospike.client.async.{ AsyncClient, AsyncClientPolicy }
 import com.aerospike.client.Host
 import com.aerospike.client.policy._
-
 import scala.collection.JavaConverters._
-
 import eu.unicredit.reactive_aerospike.listener._
 import eu.unicredit.reactive_aerospike.data._
-
 import eu.unicredit.reactive_aerospike.future._
 import scala.concurrent.ExecutionContext
+import scala.annotation.tailrec
+import java.util.HashSet
 
 class AerospikeClient(hosts: Host*)
 					 (implicit 
@@ -150,6 +149,28 @@ class AerospikeClient(hosts: Host*)
 	  	super.get(rpolicy,rl,keys_record_readers.map(_._1.inner).toArray)
 	  	rl.result.map(x => x.key_records)
    }
+
+   /*
+    * homologous records selected bins
+    */
+   def getMultiBins[T](keys: Seq[AerospikeKey[T]], binNames: Seq[String], recordReader: AerospikeRecordReader)
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+	  	implicit val keyConverter = keys(0).converter 
+	  	val rl = AerospikeMultipleReadListener(recordReader)
+	  	super.get(rpolicy,rl,keys.map(_.inner).toArray, binNames:_*)
+	  	rl.result.map(x => x.key_records)
+   }
    
-   
+   /*
+   * homologous record headers
+   */
+   def getMultiHeader[T](keys: Seq[AerospikeKey[T]], recordReader: AerospikeRecordReader)
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+	  	implicit val keyConverter = keys(0).converter 
+	  	val rl = AerospikeMultipleReadListener(recordReader)
+	  	super.getHeader(rpolicy,rl,keys.map(_.inner).toArray)
+	  	rl.result.map(x => x.key_records)
+   }
+
+
 }
