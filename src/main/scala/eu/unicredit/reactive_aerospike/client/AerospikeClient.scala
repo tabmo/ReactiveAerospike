@@ -45,7 +45,7 @@ class AerospikeClient(hosts: Host*)
     this(new Host(hostname, port))(factory = factory)   
     
     
-
+    def getExecutionContext = executionContext
     
 	def put[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {

@@ -22,6 +22,9 @@ package object data {
 /*  implicit def fromListToAS[T <: Any](l: List[T]) =
     AerospikeList(l.map(x => AerospikeValue(x)))  
 */    
+    
+  implicit def fromASVtoValueAS[T](x: AerospikeValue[T]) =
+    	x.base
 
   //From and to Bin
   /*
@@ -33,6 +36,8 @@ package object data {
   		(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =
     AerospikeBin(t._1, t._2, converter)
  
+  implicit def fromTripletToABP[T,X](t: (String, (T => X), AerospikeValueConverter[X])) = 
+    AerospikeBinProto(t._1,t._2,t._3)
   
   implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
     ab.inner
@@ -42,7 +47,7 @@ package object data {
     	case t: AerospikeValue[T] =>
       		t
     	case _ =>
-      		throw new Exception("Cannot retrieve requested bin! Please ask Andrea  a fix for that")
+      		throw new Exception("Cannot retrieve requested bin...")
   	}
 
   //from and to aerospike Key
@@ -53,5 +58,9 @@ package object data {
   implicit def fromSeqToArr[T <: Any](in: Seq[AerospikeBin[AerospikeValue[T]]]): 
 	  	Array[AerospikeBin[AerospikeValue[T]]] =
     in.toArray
+    
+  //from map to Record Reader
+  implicit def fromMapToARR(in: Map[String, AerospikeValueConverter[_]]): AerospikeRecordReader =
+    	AerospikeRecordReader(in)
     
 }

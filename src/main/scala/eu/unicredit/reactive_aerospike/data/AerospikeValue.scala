@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
 
 trait AerospikeValue[+T <: Any] extends Value {
   val inner: Value
+  val base: T
 
   override def estimateSize() =
     inner.estimateSize()
@@ -48,6 +49,7 @@ object AerospikeValue {
   case class AerospikeNull()
       extends AerospikeValue[Null] {
     override val inner = new NullValue
+    override val base = null
   }
   
   implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
@@ -58,6 +60,7 @@ object AerospikeValue {
   case class AerospikeInt(i: Int)
       extends AerospikeValue[Int] {
     override val inner = new LongValue(i)
+    override val base = i
   }
   
   implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
@@ -68,6 +71,7 @@ object AerospikeValue {
   case class AerospikeLong(l: Long)
   	  extends AerospikeValue[Long] {
     override val inner = new LongValue(l)
+    override val base = l
   }
   
   implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
@@ -78,7 +82,7 @@ object AerospikeValue {
   case class AerospikeDouble(d: Double)
   	  extends AerospikeValue[Double] {
     override val inner = new LongValue(java.lang.Double.doubleToLongBits(d))
-    
+    override val base = d
     override def toString() =
     	d.toString
   }
@@ -91,6 +95,7 @@ object AerospikeValue {
   case class AerospikeString(s: String)
       extends AerospikeValue[String] {
     override val inner = new StringValue(s)
+    override val base = s
   }
   
   implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
@@ -101,6 +106,7 @@ object AerospikeValue {
   case class AerospikeBlob(b: Array[Byte])
       extends AerospikeValue[Array[Byte]] {
     override val inner = new BlobValue(b)
+    override val base = b
   }
   
   implicit object AerospikeBlobReader extends AerospikeValueConverter[Array[Byte]] {
@@ -111,6 +117,7 @@ object AerospikeValue {
   case class AerospikeList[+T <: Any](l: List[AerospikeValue[T]])
       extends AerospikeValue[List[AerospikeValue[T]]] {
     override val inner = new ListValue(l.asJava)
+    override val base = l
     
     def this(elems: AerospikeValue[T]*) =
       	this(elems.toList)
@@ -149,6 +156,7 @@ object AerospikeValue {
   case class AerospikeMap[T1 <: Any, T2 <: Any](m: Map[AerospikeValue[T1], AerospikeValue[T2]])
       extends AerospikeValue[Map[AerospikeValue[T1],AerospikeValue[T2]]] {
     override val inner = new MapValue(m.asJava)
+    override val base = m
   }
   
   object AerospikeMap {
@@ -174,7 +182,7 @@ object AerospikeValue {
   sealed class AerospikeTuple[T1 <: Any, T2 <: Any](x1: T1, x2: T2)
   	  extends AerospikeValue[Tuple2[T1,T2]] {
     override val inner =  new NullValue
-    
+    override val base = (x1,x2)
     val key = x1
     val value = x2
   }

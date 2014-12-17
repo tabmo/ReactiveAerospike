@@ -13,6 +13,17 @@ class AerospikeRecord(
   
   def getBins = bins
   
+  def get[X](binName: String): Option[AerospikeValue[X]] = {
+    bins.find(bin => 
+      	bin.name == binName
+      	).map(bin =>
+      	  bin.value match {
+      	    case x: AerospikeValue[X] => Some(x)
+      	    case _ => None
+      	  }
+      	).flatten
+  }
+  
   def toRecordBins: Seq[(String, Object)] =
     bins.map(_.toRecordValue)
   
@@ -24,7 +35,7 @@ class AerospikeRecord(
     )
 }
 
-class AerospikeRecordReader(stub: Map[String, AerospikeValueConverter[_]]) {
+case class AerospikeRecordReader(stub: Map[String, AerospikeValueConverter[_]]) {
   
   def getStub = stub
   

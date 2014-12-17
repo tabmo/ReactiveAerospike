@@ -13,6 +13,11 @@ case class AerospikeBin[T <: Any]
   
 }
 
+case class AerospikeBinProto[T,X](name: String, f: (T => X), converter: AerospikeValueConverter[X]) {
+    def apply(o: T) =
+    	AerospikeBin(name,f(o))(converter)
+}
+
 object AerospikeBin {
 
   def apply[T <: Any](name: String, value: T)
