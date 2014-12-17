@@ -133,13 +133,10 @@ object NewTest extends App {
     puttedKey <- putted
     puttedKey2 <- putted2
   } yield {
-    /*for {
-      puttedKey2 <- putted2
-    } yield*/ {
     
     
     println(s"element putted $puttedKey")
-    
+/*    
     val result = client.get(puttedKey, reader)
 
     client.get(puttedKey, reader).onComplete{
@@ -157,7 +154,8 @@ object NewTest extends App {
         client.close()
     }
     }
-    /*
+    */
+
     client.getMulti(Seq(puttedKey,puttedKey2), reader).onComplete{
       case Success(getted) =>
          println(s"Getted records are ${getted.size}")
@@ -176,7 +174,7 @@ object NewTest extends App {
       	err.printStackTrace()
         client.close()
     }
-    */
+
     /*
     val g = client.get(key, reader)
     g.onSuccess{ getted =>
@@ -193,7 +191,7 @@ object NewTest extends App {
       	err.printStackTrace()
         client.close()
     }
-	*/
+    */
   }
 
   while(client.isConnected()) Thread.sleep(500)

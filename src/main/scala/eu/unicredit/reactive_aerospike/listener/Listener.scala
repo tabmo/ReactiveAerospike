@@ -39,8 +39,8 @@ case class AerospikeReadReturn[T <: Any](
 				  factory: Factory) 
 		extends CommandResult
 case class AerospikeMultipleReadReturn[T <: Any](
-		key_records: Seq[Tuple2[AerospikeKey[_], AerospikeRecord]])
-		(implicit recordReader: AerospikeRecordReader,
+		key_records: Seq[(AerospikeKey[_], AerospikeRecord)])
+		(implicit recordReader: Seq[AerospikeRecordReader],
 				  factory: Factory) 
 		extends CommandResult
 		
@@ -143,9 +143,45 @@ case class AerospikeMultipleReadListener[T <: Any]
 		    keys.zip(records).map(kr =>
 		      	(AerospikeKey(kr._1), AerospikeRecord(kr._2))
 		        )
+		  implicit val readers = 
+		    keys.map(_ => converter).toSeq
 		  promise.success(
 			AerospikeMultipleReadReturn(
   			  results))
+		} catch {
+	    	case err: Throwable => 
+	    	  err.printStackTrace();
+	    	  promise.failure(new AerospikeException(s"Cannot deserialize multiple records"))
+		}
+  	}
+	
+	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}
+
+case class AerospikeMultipleDifferentReadListener[T <: Any]
+			(keys_converters: Seq[(AerospikeValueConverter[_],AerospikeRecordReader)])
+			(implicit
+			    factory: Factory)
+			extends Listener[AerospikeMultipleReadReturn[T]](factory)
+			with RecordArrayListener {
+	def onSuccess(keys: Array[Key], records: Array[Record]) = {
+	  try {
+		  val results = 
+		    for {
+		      i_kr <- keys.zip(records).zipWithIndex
+		      keyConverter = try {Some(keys_converters(i_kr._2)._1)} catch {case _: Throwable => None}
+		      recordConverter = try {Some(keys_converters(i_kr._2)._2)} catch {case _: Throwable => None}
+		      if (keyConverter.isDefined && recordConverter.isDefined)
+		    } yield {
+		      (AerospikeKey(i_kr._1._1)(keys_converters(i_kr._2)._1), 
+		      AerospikeRecord(i_kr._1._2)(keys_converters(i_kr._2)._2))
+		    }
+		  implicit val readers = keys_converters.map(_._2)
+		  promise.success(
+			AerospikeMultipleReadReturn(
+  			  results.toSeq))
 		} catch {
 	    	case err: Throwable => 
 	    	  err.printStackTrace();

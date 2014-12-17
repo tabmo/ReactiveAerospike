@@ -130,6 +130,9 @@ class AerospikeClient(hosts: Host*)
 	  	rl.result.map(x => x.key_record)
    }
    
+   /*
+    * homologous records
+    */
    def getMulti[T](keys: Seq[AerospikeKey[T]], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
 	  	implicit val keyConverter = keys(0).converter 
@@ -138,4 +141,15 @@ class AerospikeClient(hosts: Host*)
 	  	rl.result.map(x => x.key_records)
    }
 
+   /*
+    * NON homologous records
+    */   
+   def getMultiDifferent(keys_record_readers: Seq[(AerospikeKey[_], AerospikeRecordReader)])
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+	  	val rl = AerospikeMultipleDifferentReadListener(keys_record_readers.map(x => (x._1.converter, x._2)))
+	  	super.get(rpolicy,rl,keys_record_readers.map(_._1.inner).toArray)
+	  	rl.result.map(x => x.key_records)
+   }
+   
+   
 }
