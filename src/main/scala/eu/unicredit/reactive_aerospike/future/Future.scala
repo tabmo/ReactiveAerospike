@@ -34,10 +34,15 @@ object ScalaFactory extends Factory {
     		  : Future[S] = {
     	val p = new ScalaPromise[S]
     	inner.onComplete{ 
-    	  case Success(value) => 
-          	p.success(f(value))
-    	  case Failure(err) => 
-          	p.failure(err)
+    		case Success(value) =>
+    		  try
+    			p.success(f(value))
+    		  catch {
+    		  	case err: Throwable =>
+    		  		p.failure(err)
+    		  }
+    		case Failure(err) => 
+    			p.failure(err)
     	}
     	p.future
     }
@@ -46,9 +51,14 @@ object ScalaFactory extends Factory {
   				: Future[S] = {
       val p = new ScalaPromise[S]
       inner.onComplete{
-        case Success(value) =>
-        	f(value).map(x => p.success(x))
-        case Failure(err) => p.failure(err)
+      	case Success(value) =>
+      	  try
+       		f(value).map(x => p.success(x))
+       	  catch {
+    		  	case err: Throwable =>
+    		  		p.failure(err)
+           }
+       	case Failure(err) => p.failure(err)
       }
       p.future
     }
@@ -91,7 +101,14 @@ object TwitterFactory extends Factory {
     		  (implicit executionContext: ExecutionContext)
     		  : Future[S] = {
     	val p = new TwitterPromise[S]
-    	inner.onSuccess{value => p.success(f(value))}
+   		inner.onSuccess{value =>
+   		  try
+   		  	p.success(f(value))
+   		  catch {
+    		  	case err: Throwable =>
+    		  		p.failure(err)
+    	  }
+   		}
     	inner.onFailure{err => p.failure(err)}
     	p.future
     }
@@ -99,7 +116,14 @@ object TwitterFactory extends Factory {
   				(implicit executionContext: ExecutionContext)
   				: Future[S] = {
       val p = new TwitterPromise[S]
-      inner.onSuccess{value => f(value).map(x => {p.success(x)})}
+      inner.onSuccess{value => 
+        try
+        	f(value).map(x => {p.success(x)})
+        catch {
+        	case err: Throwable => 
+        		p.failure(err)
+        }
+      }
       inner.onFailure{err => p.failure(err)}
       p.future
     }

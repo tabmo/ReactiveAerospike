@@ -71,9 +71,9 @@ case class Person(
   }
 }
 
-object PersonDao extends Dao[String, Person] {
-  
-  val client = PersistanceTest.client
+object PersonDao extends Dao[String, Person](
+    PersistanceTest.client
+    ) {
   
   val namespace = "debugging"
   
