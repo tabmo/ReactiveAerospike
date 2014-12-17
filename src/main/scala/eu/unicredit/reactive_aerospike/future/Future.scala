@@ -46,8 +46,8 @@ object ScalaFactory extends Factory {
   				: Future[S] = {
       val p = new ScalaPromise[S]
       inner.onComplete{
-        case Success(value) => 
-          	f(value).flatMap(x => {p.success(x); p.future})
+        case Success(value) =>
+        	f(value).map(x => p.success(x))
         case Failure(err) => p.failure(err)
       }
       p.future
@@ -99,7 +99,7 @@ object TwitterFactory extends Factory {
   				(implicit executionContext: ExecutionContext)
   				: Future[S] = {
       val p = new TwitterPromise[S]
-      inner.onSuccess{value => f(value).flatMap(x => {p.success(x); p.future})}
+      inner.onSuccess{value => f(value).map(x => {p.success(x)})}
       inner.onFailure{err => p.failure(err)}
       p.future
     }

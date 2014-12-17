@@ -51,7 +51,6 @@ class AerospikeClient(hosts: Host*)
 	def put[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
 	  	implicit val converter = key.converter
-	  	println("factory class is "+factory)
 	  	val wl = AerospikeWriteListener()
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
 		wl.result.map(_.key)
@@ -114,4 +113,29 @@ class AerospikeClient(hosts: Host*)
 	  	super.get(rpolicy,rl,key.inner)
 	  	rl.result.map(x => x.key_record)
    }
+   	
+   def getBins(key: AerospikeKey[_], binNames: Seq[String], recordReader: AerospikeRecordReader)
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
+	  	implicit val keyConverter = key.converter 
+	  	val rl = AerospikeReadListener(recordReader)
+	  	super.get(rpolicy,rl,key.inner,binNames:_*)
+	  	rl.result.map(x => x.key_record)
+   }
+   
+   def getHeader(key: AerospikeKey[_], recordReader: AerospikeRecordReader)
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
+	  	implicit val keyConverter = key.converter 
+	  	val rl = AerospikeReadListener(recordReader)
+	  	super.getHeader(rpolicy,rl,key.inner)
+	  	rl.result.map(x => x.key_record)
+   }
+   
+   def getMulti[T](keys: Seq[AerospikeKey[T]], recordReader: AerospikeRecordReader)
+   			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+	  	implicit val keyConverter = keys(0).converter 
+	  	val rl = AerospikeMultipleReadListener(recordReader)
+	  	super.get(rpolicy,rl,keys.map(_.inner).toArray)
+	  	rl.result.map(x => x.key_records)
+   }
+
 }

@@ -1,7 +1,11 @@
 package eu.unicredit.reactive_aerospike.listener
 
 import com.aerospike.client.{AerospikeException, Key,Record}
-import com.aerospike.client.listener.{WriteListener, RecordListener, DeleteListener, ExistsListener}
+import com.aerospike.client.listener.{WriteListener, 
+									  RecordListener, 
+									  DeleteListener, 
+									  ExistsListener,
+									  RecordArrayListener}
 import eu.unicredit.reactive_aerospike.future.{Promise, Future, Factory}
 import eu.unicredit.reactive_aerospike.data._
 import AerospikeValue.AerospikeValueConverter
@@ -34,6 +38,12 @@ case class AerospikeReadReturn[T <: Any](
 		(implicit recordReader: AerospikeRecordReader,
 				  factory: Factory) 
 		extends CommandResult
+case class AerospikeMultipleReadReturn[T <: Any](
+		key_records: Seq[Tuple2[AerospikeKey[_], AerospikeRecord]])
+		(implicit recordReader: AerospikeRecordReader,
+				  factory: Factory) 
+		extends CommandResult
+		
 
 
 case class AerospikeWriteListener[T <: Any]()
@@ -111,6 +121,36 @@ case class AerospikeReadListener[T <: Any]
 		}
   	  
 	  }
+  	}
+	
+	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}
+
+case class AerospikeMultipleReadListener[T <: Any]
+			(converter: AerospikeRecordReader)
+			(implicit
+			    keyConverter: AerospikeValueConverter[_],
+			    factory: Factory)
+			extends Listener[AerospikeMultipleReadReturn[T]](factory)
+			with RecordArrayListener {
+	implicit val conv = converter 
+  
+	def onSuccess(keys: Array[Key], records: Array[Record]) = {
+	  try {
+		  val results = 
+		    keys.zip(records).map(kr =>
+		      	(AerospikeKey(kr._1), AerospikeRecord(kr._2))
+		        )
+		  promise.success(
+			AerospikeMultipleReadReturn(
+  			  results))
+		} catch {
+	    	case err: Throwable => 
+	    	  err.printStackTrace();
+	    	  promise.failure(new AerospikeException(s"Cannot deserialize multiple records"))
+		}
   	}
 	
 	def onFailure(exception: AerospikeException) = {

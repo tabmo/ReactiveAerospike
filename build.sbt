@@ -1,3 +1,6 @@
+import AssemblyKeys._ 
+import sbtassembly.Plugin._
+
 name := """reactive-aerospike"""
 
 version := "0.1.1-SNAPSHOT"
@@ -27,3 +30,6 @@ resolvers ++= Seq(
 publishMavenStyle := true
 
 pomIncludeRepository := { x => false }
+
+//To be removed
+assemblySettings
