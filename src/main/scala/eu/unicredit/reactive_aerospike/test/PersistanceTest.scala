@@ -79,7 +79,7 @@ object PersonDao extends Dao[String, Person](PersistanceTest.client) {
   
   val namespace = "debugging"
   
-  val set = "people"
+  val setName = "people"
   
   val objWrite: Seq[AerospikeBinProto[Person,_]] =
       Seq(

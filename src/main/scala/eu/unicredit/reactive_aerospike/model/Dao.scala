@@ -14,7 +14,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
   
   val namespace: String
   
-  val set: String
+  val setName: String
   
   val objWrite: Seq[AerospikeBinProto[T,_]]
   val objRead: (AerospikeKey[K],AerospikeRecord) => T
@@ -31,10 +31,10 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     )
   
   private def localKey(key: K) =
-    AerospikeKey(namespace,set, keyConverter.toAsV(key), keyConverter)
+    AerospikeKey(namespace,setName, keyConverter.toAsV(key), keyConverter)
     
   private def localKey(key: AerospikeValue[K]) =
-    AerospikeKey(namespace,set, key, keyConverter)    
+    AerospikeKey(namespace,setName, key, keyConverter)    
   
   val defaultCreateWritePolicy = {
     val wp = new WritePolicy
@@ -69,16 +69,9 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     wp.expiration = -1
     wp
   }
-    
-  def create(obj: T): Future[K] = {
-    client.put(localKey(obj.getKey), fromObjToBinSeq(obj))(defaultCreateWritePolicy).map(ak =>
-      ak.userKey
-    )
-  }
   
-  def read(key: K): Future[T] = {
-    client.get(localKey(key), objBindings)(defaultReadPolicy).map(kr =>
-      kr._1 match {
+  def getObjFromKeyRecord(kr: (AerospikeKey[_], AerospikeRecord)): T = 
+    kr._1 match {
         case foundKey: AerospikeKey[K] =>
           try {
           	objRead(foundKey,kr._2)
@@ -87,6 +80,16 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
       	  }
         case _ => throw new Exception("key is not of the secified type")
       }
+  
+  def create(obj: T): Future[K] = {
+    client.put(localKey(obj.getKey), fromObjToBinSeq(obj))(defaultCreateWritePolicy).map(ak =>
+      ak.userKey
+    )
+  }
+  
+  def read(key: K): Future[T] = {
+    client.get(localKey(key), objBindings)(defaultReadPolicy).map(kr =>
+      getObjFromKeyRecord(kr)
     )
   }
 
@@ -102,5 +105,31 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
       else throw new Exception(s"Object with key $key does not exists")
     )
   }
+  
+  def findOn(field: String, value: String): Future[Seq[T]] = 
+    findOn(AerospikeBin(field, value))
+  def findOn(field: String, value: Long): Future[Seq[T]] = 
+    findOn(AerospikeBin(field, value))
+  private def findOn(bin : AerospikeBin[_]): Future[Seq[T]] =
+    objBindings.getStub.find(b => b._1 == bin.name) match {
+      case None => throw new Exception("Cannot find selected field")
+      case Some(proto) =>
+        client.queryEqual(AerospikeKey(namespace, setName, ""), objBindings, bin).map(krs =>
+          krs.map(kr =>
+        	getObjFromKeyRecord(kr)
+          )
+        )
+    }
+  
+  def findWithin(field: String, minValue: Long, maxValue: Long): Future[Seq[T]] = 
+    objBindings.getStub.find(b => b._1 == field) match {
+      case None => throw new Exception("Cannot find selected field")
+      case Some(proto) =>
+        client.queryRange(AerospikeKey(namespace, setName, ""), objBindings, field, minValue, maxValue).map(krs =>
+          krs.map(kr =>
+        	getObjFromKeyRecord(kr)
+          )
+        )
+    }
 
 }
