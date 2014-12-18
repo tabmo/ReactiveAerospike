@@ -3,6 +3,7 @@ package eu.unicredit.reactive_aerospike.client
 import com.aerospike.client.async.{ AsyncClient, AsyncClientPolicy }
 import com.aerospike.client.Host
 import com.aerospike.client.policy._
+import com.aerospike.client.query.{Statement, Filter}
 import scala.collection.JavaConverters._
 import eu.unicredit.reactive_aerospike.listener._
 import eu.unicredit.reactive_aerospike.data._
@@ -171,9 +172,51 @@ class AerospikeClient(hosts: Host*)
 	  	super.getHeader(rpolicy,rl,keys.map(_.inner).toArray)
 	  	rl.result.map(x => x.key_records)
    }
+  
+  def queryEqual[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filter: AerospikeBin[_])
+  			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    try {
+	  val statement = new Statement()
+	  statement.setNamespace(key_stub.namespace)
+	  statement.setSetName(key_stub.setName)
+	  
+	  statement.setFilters(Filter.equal(filter.name , filter.value.inner))
+	  
+	  implicit val keyConverter = key_stub.converter
+	  val sl = AerospikeSequenceReadListener[T](recordReader)
+	  super.query(qpolicy,statement, sl)
+	  sl.result.map(x => x.key_records)
+    } catch {
+      case err: Throwable =>
+        err.printStackTrace()
+        throw new Exception("'AZZ")
+    }
+  }  
+  
+  def queryRange[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filterBinName: String, rangeMin: Long, rangeMax: Long)
+  			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    try {
+	  val statement = new Statement()
+	  statement.setNamespace(key_stub.namespace)
+	  statement.setSetName(key_stub.setName)
+	  
+	  statement.setFilters(
+	      Filter.range(filterBinName, 
+	    		  	   rangeMin,
+	    		  	   rangeMax))
+	  
+	  implicit val keyConverter = key_stub.converter
+	  val sl = AerospikeSequenceReadListener[T](recordReader)
+	  super.query(qpolicy,statement, sl)
+	  sl.result.map(x => x.key_records)
+    } catch {
+      case err: Throwable =>
+        err.printStackTrace()
+        throw new Exception("'AZZ")
+    }
+  }
 
-   /*
-   * query with filters on Secondary keys 
-   */
-
+  
+  //TBD query range
+   
 }

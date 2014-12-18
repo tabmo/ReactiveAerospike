@@ -8,7 +8,7 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 import scala.concurrent.ExecutionContext.Implicits.global
 import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 
-object PersistanceTest extends App {
+object PersistanceTest /*extends App*/ {
 	val client = new AerospikeClient("localhost", 3000)
 	
 	val andrea = Person("andrea","andrea","peruffo",32)

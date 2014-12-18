@@ -41,6 +41,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     wp.recordExistsAction = RecordExistsAction.CREATE_ONLY
     wp.generation = 0
     wp.expiration = -1
+    wp.sendKey = true
     wp
   }
   

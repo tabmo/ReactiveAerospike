@@ -5,11 +5,13 @@ import com.aerospike.client.listener.{WriteListener,
 									  RecordListener, 
 									  DeleteListener, 
 									  ExistsListener,
-									  RecordArrayListener}
+									  RecordArrayListener,
+									  RecordSequenceListener}
 import eu.unicredit.reactive_aerospike.future.{Promise, Future, Factory}
 import eu.unicredit.reactive_aerospike.data._
 import AerospikeValue.AerospikeValueConverter
 import scala.language.existentials
+import scala.collection.immutable.Stream._
 
 class Listener[T <: CommandResult](factory: Factory) { 
   val promise: Promise[T] =
@@ -43,8 +45,6 @@ case class AerospikeMultipleReadReturn[T <: Any](
 		(implicit recordReader: Seq[AerospikeRecordReader],
 				  factory: Factory) 
 		extends CommandResult
-		
-
 
 case class AerospikeWriteListener[T <: Any]()
 				(implicit converter: AerospikeValueConverter[T],
@@ -190,6 +190,46 @@ case class AerospikeMultipleDifferentReadListener[T <: Any]
   	}
 	
 	def onFailure(exception: AerospikeException) = {
+  	  promise.failure(exception)
+	}
+}
+
+case class AerospikeSequenceReadListener[T <: Any]
+			(converter: AerospikeRecordReader)
+			(implicit
+			    keyConverter: AerospikeValueConverter[T],
+			    factory: Factory)
+			extends Listener[AerospikeMultipleReadReturn[T]](factory)
+			with RecordSequenceListener {
+	implicit val conv = converter 
+	
+	val stream: StreamBuilder[(AerospikeKey[T], AerospikeRecord)] = new StreamBuilder()
+	
+	def onRecord(key: Key, record: Record) = {
+		println("adding a record! "+key+" "+record)
+		val toAdd =
+		  try 
+			Some((AerospikeKey(key), AerospikeRecord(record)))
+		  catch {
+		  	case err : Throwable => err.printStackTrace();None
+		  }
+		
+		toAdd.map(stream += _) 
+    }
+	
+  	def onSuccess() = {
+  	  	println("ending...")
+  	  	val result = stream.result.toSeq
+  	  	
+  	  	val readers = 
+  	  	  for (i <- 0.to(result.length)) yield converter
+  	  	
+		promise.success(
+			AerospikeMultipleReadReturn(
+  			  result)(readers,factory))
+    }
+  	
+    def onFailure(exception: AerospikeException) = {
   	  promise.failure(exception)
 	}
 }
