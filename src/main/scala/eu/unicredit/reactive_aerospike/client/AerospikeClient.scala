@@ -172,5 +172,8 @@ class AerospikeClient(hosts: Host*)
 	  	rl.result.map(x => x.key_records)
    }
 
+   /*
+   * query with filters on Secondary keys 
+   */
 
 }

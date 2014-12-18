@@ -25,6 +25,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
+	"Local Aerospike Build" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 )
 
 publishMavenStyle := true

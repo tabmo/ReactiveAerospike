@@ -48,44 +48,44 @@ object PersistanceTest extends App {
 	println("End")
 }
 
-case class Person(
-    id: String,
-    name: String,
-    surname: String,
-    age : Int) 
-    extends ModelObj[String](id) {
-  
-  val dao = PersonDao
-  
-  override def equals(p2: Any) = {
+trait EqualPerson {
+  self: Person =>
+   override def equals(p2: Any) = {
     p2 match {
       case per: Person =>
         (
-        per.id == id &&
-        per.name == name &&
-        per.surname == surname &&
-        per.age == age
+        per.id == self.id &&
+        per.name == self.name &&
+        per.surname == self.surname &&
+        per.age == self.age
         )
       case _ => false
     }
   }
 }
 
-object PersonDao extends Dao[String, Person](
-    PersistanceTest.client
-    ) {
+case class Person(
+    id: String,
+    name: String,
+    surname: String,
+    age : Int) 
+    extends ModelObj[String](id) with EqualPerson {
+  
+  val dao = PersonDao
+  
+}
+
+object PersonDao extends Dao[String, Person](PersistanceTest.client) {
   
   val namespace = "debugging"
   
   val set = "people"
   
-  val keyConverter = AerospikeStringReader
-  
   val objWrite: Seq[AerospikeBinProto[Person,_]] =
       Seq(
-    	("name", (p: Person) => p.name, AerospikeStringReader),
-    	("surname", (p: Person) => p.surname, AerospikeStringReader),
-    	("age", (p: Person) => p.age, AerospikeIntReader)    	
+    	("name", (p: Person) => p.name),
+    	("surname", (p: Person) => p.surname),
+    	("age", (p: Person) => p.age)    	
       )
   
   val objRead: (AerospikeKey[String],AerospikeRecord) => Person =

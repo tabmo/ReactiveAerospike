@@ -38,6 +38,9 @@ package object data {
  
   implicit def fromTripletToABP[T,X](t: (String, (T => X), AerospikeValueConverter[X])) = 
     AerospikeBinProto(t._1,t._2,t._3)
+    
+  implicit def fromTupleToABP[T,X](t: (String, (T => X)))(implicit converter: AerospikeValueConverter[X]) = 
+    AerospikeBinProto(t._1,t._2,converter)    
   
   implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
     ab.inner

@@ -9,14 +9,13 @@ import scala.concurrent.ExecutionContext
 
 abstract class Dao[K <: Any,T <: ModelObj[K]]
 				  (client: AerospikeClient)
-				  (implicit executionContext: ExecutionContext){
+				  (implicit executionContext: ExecutionContext,
+						  	keyConverter: AerospikeValueConverter[K]){
   
   val namespace: String
   
   val set: String
   
-  val keyConverter: AerospikeValueConverter[K]
-   
   val objWrite: Seq[AerospikeBinProto[T,_]]
   val objRead: (AerospikeKey[K],AerospikeRecord) => T
   
