@@ -206,7 +206,6 @@ case class AerospikeSequenceReadListener[T <: Any]
 	val stream: StreamBuilder[(AerospikeKey[T], AerospikeRecord)] = new StreamBuilder()
 	
 	def onRecord(key: Key, record: Record) = {
-		println("adding a record! "+key+" "+record)
 		val toAdd =
 		  try 
 			Some((AerospikeKey(key), AerospikeRecord(record)))
@@ -218,7 +217,6 @@ case class AerospikeSequenceReadListener[T <: Any]
     }
 	
   	def onSuccess() = {
-  	  	println("ending...")
   	  	val result = stream.result.toSeq
   	  	
   	  	val readers = 
