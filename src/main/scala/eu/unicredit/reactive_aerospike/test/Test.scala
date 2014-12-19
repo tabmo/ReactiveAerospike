@@ -87,7 +87,7 @@ object NewTest /*extends App*/ {
     
     
     println(s"element putted $puttedKey")
-/*    
+    
     val result = client.get(puttedKey, reader)
 
     client.get(puttedKey, reader).onComplete{
@@ -104,8 +104,7 @@ object NewTest /*extends App*/ {
       	err.printStackTrace()
         client.close()
     }
-    }
-    */
+    
 
     client.getMulti(Seq(puttedKey,puttedKey2), reader).onComplete{
       case Success(getted) =>
