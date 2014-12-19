@@ -71,56 +71,7 @@ object NewTest /*extends App*/ {
           ("cinque" -> mapReader[String,Int])
           )
       )
-  
-  /*
-  class ModelObj[+T](key: AerospikeKey[T]) {
-    
-    val singleton: Dao[_]
-  }
-  
-  class Dao[T] {
-    
-    
-    def get[T] = {}
-    def put(t: T) = {}
-  }
-  
-  case class Qualcosa(
-      key: String, 
-      uno: Int,
-      due: String,
-      tre: List[String]
-      ) extends ModelObj(AerospikeKey(key)) {
-    
-    val singleton = Qualcosa
-  }
-  
-  object Qualcosa extends Dao[Qualcosa] {
-    val namespace = "test"
-      
-    val set = "mySet"
-    
-   def writer(q: Qualcosa): Seq[Bin] = {
-      "key" -> q.uno
-    }   
-      
-   implicit val reader = new AerospikeRecordReader(
-      Map(("key" -> AerospikeDoubleReader),
-          //("due" -> AerospikeStringReader),
-          ("tre" -> listReader[Double]),
-          ("quattro" -> listReader(AerospikeListReader[Int]())),
-          ("cinque" -> mapReader[String,Int])
-          )
-      )
-  }
-  
-  Qualcosa.put(Qualcosa("key",1,"due",List("1","2")))
-  */
-  /*
-  client.delete(null, key.inner)
-  Thread.sleep(5000)
-  System.exit(0)
-  */
+
   import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
   import scala.concurrent._
   //import eu.unicredit.reactive_aerospike.future.TwitterFactory.Helpers._

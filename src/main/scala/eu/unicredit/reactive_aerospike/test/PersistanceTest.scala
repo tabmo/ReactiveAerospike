@@ -7,26 +7,30 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+import scala.concurrent._
+import scala.util.{Success, Failure}
 
-object PersistanceTest /*extends App*/ {
+object PersistanceTest extends App {
 	val client = new AerospikeClient("localhost", 3000)
 	
 	val andrea = Person("andrea","andrea","peruffo",32)
 	val pippo = Person("pippo","pippo","pippo",32)
 	
-	for {
-		exa <- PersonDao.delete("andrea")
-	} yield {
-	  println("deleted old key andrea")
+	val deleteStep1 = Promise[Boolean]
+	val deleteStep2 = Promise[Boolean]
+	
+	PersonDao.delete("andrea").onComplete{
+	  case Success(k) => deleteStep1.success(true)
+	  case Failure(err) => deleteStep1.success(false)
 	}
-	for {
-		exa <- PersonDao.delete("pippo")
-	} yield {
-	  println("deleted old key pippo")
+	PersonDao.delete("pippo").onComplete{
+	  case Success(k) => deleteStep2.success(true)
+	  case Failure(err) => deleteStep2.success(false)
 	}
-	Thread.sleep(1000)
 	
 	for {
+		ds1 <- deleteStep1.future
+		ds2 <- deleteStep2.future
 		ak <- PersonDao.create(andrea)
 		pk <- PersonDao.create(pippo)
 	} yield {
@@ -37,14 +41,16 @@ object PersistanceTest /*extends App*/ {
 		  println(s"ANDREA: Sono uguali? ${andrea==checkAndrea}")
 	  }
 	  for {
-	    checkPippo <- PersonDao.read("pippo")
+	    checkPippo <- PersonDao.findOn("surname", "pippo") 
+	    if (checkPippo.size>0)
+	    retPippo = checkPippo(0)
 	  } {
-		  println(s"PIPPO: Sono uguali? ${pippo==checkPippo}")
+		  println(s"PIPPO: Sono uguali? ${pippo==retPippo}")
 		  client.close
 	  }
 	}
 
-	while(client.isConnected()) Thread.sleep(1000)
+	while(client.isConnected()) Thread.sleep(100)
 	println("End")
 }
 

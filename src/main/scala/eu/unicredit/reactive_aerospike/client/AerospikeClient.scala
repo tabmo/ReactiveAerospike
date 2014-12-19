@@ -11,6 +11,7 @@ import eu.unicredit.reactive_aerospike.future._
 import scala.concurrent.ExecutionContext
 import scala.annotation.tailrec
 import java.util.HashSet
+import com.aerospike.client.async.MaxCommandAction
 
 class AerospikeClient(hosts: Host*)
 					 (implicit 
@@ -175,7 +176,6 @@ class AerospikeClient(hosts: Host*)
   
   def queryEqual[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filter: AerospikeBin[_])
   			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
-    try {
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
 	  statement.setSetName(key_stub.setName)
@@ -186,16 +186,10 @@ class AerospikeClient(hosts: Host*)
 	  val sl = AerospikeSequenceReadListener[T](recordReader)
 	  super.query(qpolicy,statement, sl)
 	  sl.result.map(x => x.key_records)
-    } catch {
-      case err: Throwable =>
-        err.printStackTrace()
-        throw new Exception("'AZZ")
-    }
   }  
   
   def queryRange[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filterBinName: String, rangeMin: Long, rangeMax: Long)
   			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
-    try {
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
 	  statement.setSetName(key_stub.setName)
@@ -209,11 +203,6 @@ class AerospikeClient(hosts: Host*)
 	  val sl = AerospikeSequenceReadListener[T](recordReader)
 	  super.query(qpolicy,statement, sl)
 	  sl.result.map(x => x.key_records)
-    } catch {
-      case err: Throwable =>
-        err.printStackTrace()
-        throw new Exception("'AZZ")
-    }
   }
 
   

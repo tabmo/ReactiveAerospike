@@ -112,13 +112,14 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     findOn(AerospikeBin(field, value))
   private def findOn(bin : AerospikeBin[_]): Future[Seq[T]] =
     objBindings.getStub.find(b => b._1 == bin.name) match {
-      case None => throw new Exception("Cannot find selected field")
+      case None =>
+        throw new Exception("Cannot find selected field")
       case Some(proto) =>
         client.queryEqual(AerospikeKey(namespace, setName, ""), objBindings, bin).map(krs =>
           krs.map(kr =>
         	getObjFromKeyRecord(kr)
           )
-        )
+        )    
     }
   
   def findWithin(field: String, minValue: Long, maxValue: Long): Future[Seq[T]] = 

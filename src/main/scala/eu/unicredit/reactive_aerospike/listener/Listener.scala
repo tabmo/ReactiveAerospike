@@ -218,7 +218,6 @@ case class AerospikeSequenceReadListener[T <: Any]
 	
   	def onSuccess() = {
   	  	val result = stream.result.toSeq
-  	  	
   	  	val readers = 
   	  	  for (i <- 0.to(result.length)) yield converter
   	  	

@@ -10,10 +10,10 @@ import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 import com.aerospike.client.policy.QueryPolicy
 import com.aerospike.client.query.{Statement, Filter}
 
-object TestQueryRAW extends App {
+object TestQueryRAW /*extends App*/ {
   println("Start")
   val client = new AerospikeClient("localhost", 3000)
-  
+
   val key_stub = AerospikeKey("debugging", "people", "")
   
   val personReader = 
