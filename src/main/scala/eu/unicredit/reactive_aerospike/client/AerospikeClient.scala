@@ -202,8 +202,5 @@ class AerospikeClient(hosts: Host*)
 	  super.query(qpolicy,statement, sl)
 	  sl.result.map(x => x.key_records)
   }
-
-  
-  //TBD query range
    
 }

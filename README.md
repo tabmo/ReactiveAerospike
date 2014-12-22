@@ -27,4 +27,4 @@ You can use directly the client and have to manage Bins and Records manually or 
 
 #### API stability
 
-The API described above should be considered unstable. The published, non-snapshot version of HBase-RDD may contain a slightly different API, based on comments received for the first version.
+The API described above should be considered unstable.
