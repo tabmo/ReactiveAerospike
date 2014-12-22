@@ -1,6 +1,7 @@
 ### REACTIVE AEROSPIKE
  
- This is a pure Scala wrapper of the official "aerospike java client".
+ This is a pure Scala FUNCTIONAL and TYPE SAFE wrapper of the official "aerospike java client".
+ No more explicit cast and "asInstanceOf" in client code are needed!
  
  It makes use of the async client and returns are wrapped into custom Future types wich can easly be mapped to your preferred Future implementation (bundled with Scala Standard Futures but if you prefer twitter ones just copy and past the code at the end of Future.scala file in your project and explicitly pass the Factory to the AerospikeClient).
  
@@ -17,3 +18,9 @@ cd aerospike-client-java/
 ```
 
 after that just clone and use Reactive Aerospike!
+
+#### Usage
+
+Please for usage examples refer to the tests in code.
+
+You can use directly the client and have to manage Bins and Records manually or make use of the "model" api to have ORM functionalities.
