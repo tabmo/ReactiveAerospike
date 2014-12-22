@@ -16,16 +16,15 @@ scalacOptions ++= Seq(
   "-language:reflectiveCalls"
 )
 
+//If you wont to use twitter future
+//"com.twitter" %% "util-collection" % "6.23.0"
 libraryDependencies ++= Seq(
 	  "com.aerospike" % "aerospike-client" % "3.0.33-SNAPSHOT",
-	  "com.twitter" %% "util-collection" % "6.23.0"  
+	  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 
-//Local maven repo
-//"Local Aerospike Build" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 resolvers ++= Seq(
-	"Local Maven Repository - snapshots" at "http://nexus.rnd.unicredit.eu/content/repositories/snapshots",
-  	"Local Maven Repository - releases" at "http://nexus.rnd.unicredit.eu/content/repositories/releases"
+	"Local Aerospike Build" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 )
 
 publishMavenStyle := true

@@ -101,6 +101,10 @@ object ScalaFactory extends Factory {
   }
 }
 
+/*
+
+Copy the rest if you want to use Twitter Future
+
 /* Twitter Future compatibility implementation */
 object TwitterFactory extends Factory {
 	class TwitterFuture[+T]
@@ -163,3 +167,4 @@ object TwitterFactory extends Factory {
         
   }
 }
+*/
