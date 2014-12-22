@@ -16,11 +16,10 @@ scalacOptions ++= Seq(
   "-language:reflectiveCalls"
 )
 
-//If you wont to use twitter future
-//"com.twitter" %% "util-collection" % "6.23.0"
 libraryDependencies ++= Seq(
 	  "com.aerospike" % "aerospike-client" % "3.0.33-SNAPSHOT",
-	  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
+	  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
+	  "com.twitter" %% "util-collection" % "6.23.0" % "test"
 )
 
 resolvers ++= Seq(
