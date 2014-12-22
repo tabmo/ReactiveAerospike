@@ -5,12 +5,10 @@ import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 import eu.unicredit.reactive_aerospike.future.{Future, Promise}
 import com.aerospike.client.policy._
-import scala.concurrent.ExecutionContext
 
 abstract class Dao[K <: Any,T <: ModelObj[K]]
 				  (client: AerospikeClient)
-				  (implicit executionContext: ExecutionContext,
-						  	keyConverter: AerospikeValueConverter[K]){
+				  (implicit keyConverter: AerospikeValueConverter[K]){
   
   val namespace: String
   

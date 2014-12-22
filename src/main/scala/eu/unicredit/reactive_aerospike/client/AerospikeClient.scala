@@ -8,7 +8,6 @@ import scala.collection.JavaConverters._
 import eu.unicredit.reactive_aerospike.listener._
 import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.future._
-import scala.concurrent.ExecutionContext
 import scala.annotation.tailrec
 import java.util.HashSet
 import com.aerospike.client.async.MaxCommandAction
@@ -16,7 +15,6 @@ import com.aerospike.client.async.MaxCommandAction
 class AerospikeClient(hosts: Host*)
 					 (implicit 
 						policy: AsyncClientPolicy = new AsyncClientPolicy(),
-						executionContext: ExecutionContext = ExecutionContext.Implicits.global,
 						factory: Factory = ScalaFactory
 					    ) 
 					  extends AsyncClient(policy, hosts:_*){
@@ -24,30 +22,15 @@ class AerospikeClient(hosts: Host*)
   def this(hostname: String, port: Int) =
     this(new Host(hostname, port))
   def this(hostname: String, port: Int, 
-		   policy: AsyncClientPolicy, 
-		   executionContext: ExecutionContext) =
-    this(new Host(hostname, port))(policy,executionContext)
-  def this(hostname: String, port: Int, 
 		   policy: AsyncClientPolicy) =
     this(new Host(hostname, port))(policy = policy)   
   def this(hostname: String, port: Int, 
-		   executionContext: ExecutionContext) =
-    this(new Host(hostname, port))(executionContext = executionContext)
-  def this(hostname: String, port: Int, 
-		   policy: AsyncClientPolicy, 
-		   executionContext: ExecutionContext,
+		   policy: AsyncClientPolicy,
 		   factory: Factory) =
-    this(new Host(hostname, port))(policy,executionContext,factory)
-  def this(hostname: String, port: Int, 
-		   executionContext: ExecutionContext,
-		   factory: Factory) =
-    this(new Host(hostname, port))(executionContext = executionContext, factory = factory)   
-  def this(hostname: String, port: Int, 
+    this(new Host(hostname, port))(policy,factory)
+  def this(hostname: String, port: Int,
 		   factory: Factory) =
     this(new Host(hostname, port))(factory = factory)   
-    
-    
-    def getExecutionContext = executionContext
     
 	def put[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {

@@ -8,7 +8,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 
-object NewTest /*extends App*/ {
+object NewTest extends App {
   println("Flattened everything a bit")  
   
   //val client = new AerospikeClient("localhost", 3000)

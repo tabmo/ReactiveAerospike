@@ -1,12 +1,12 @@
 package eu.unicredit.reactive_aerospike.future
 
-import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
+import javax.xml.datatype.Duration
 
 trait Future[+T]  {
-  def map[S](f: T => S)(implicit executionContext: ExecutionContext): Future[S]
+  def map[S](f: T => S): Future[S]
   def flatMap[S]
-	(f: T => Future[S])(implicit executionContext: ExecutionContext): Future[S]
+	(f: T => Future[S]): Future[S]
   
   /* to add onComplete helpers*/
 }
@@ -29,9 +29,21 @@ object ScalaFactory extends Factory {
 		  extends Future[T] {
     val inner = f
     
+    //please complete this before usage if needed
+    
+    lazy val executionContextPromise = scala.concurrent.Promise[scala.concurrent.ExecutionContext]
+    lazy val defaultExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+    private lazy implicit val executionContext =
+      try
+      scala.concurrent.Await.result(
+      	executionContextPromise.future, scala.concurrent.duration.Duration.Zero) 
+      catch {
+        case _: Throwable => defaultExecutionContext 
+      }
+    
     def map[S](f: T => S)
-    		  (implicit executionContext: ExecutionContext)
     		  : Future[S] = {
+        implicit val ec = implicitly[scala.concurrent.ExecutionContext]
     	val p = new ScalaPromise[S]
     	inner.onComplete{ 
     		case Success(value) =>
@@ -43,12 +55,12 @@ object ScalaFactory extends Factory {
     		  }
     		case Failure(err) => 
     			p.failure(err)
-    	}
+    	}(ec)
     	p.future
     }
   	def flatMap[S](f: T => Future[S])
-  				(implicit executionContext: ExecutionContext)
   				: Future[S] = {
+  	  implicit val ec = implicitly[scala.concurrent.ExecutionContext]
       val p = new ScalaPromise[S]
       inner.onComplete{
       	case Success(value) =>
@@ -59,7 +71,7 @@ object ScalaFactory extends Factory {
     		  		p.failure(err)
            }
        	case Failure(err) => p.failure(err)
-      }
+      }(ec)
       p.future
     }
   }
@@ -98,7 +110,6 @@ object TwitterFactory extends Factory {
     val inner = f
     
     def map[S](f: T => S)
-    		  (implicit executionContext: ExecutionContext)
     		  : Future[S] = {
     	val p = new TwitterPromise[S]
    		inner.onSuccess{value =>
@@ -113,7 +124,6 @@ object TwitterFactory extends Factory {
     	p.future
     }
   	def flatMap[S](f: T => Future[S])
-  				(implicit executionContext: ExecutionContext)
   				: Future[S] = {
       val p = new TwitterPromise[S]
       inner.onSuccess{value => 
