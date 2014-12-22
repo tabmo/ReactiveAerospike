@@ -1,4 +1,4 @@
- # REACTIVE AEROSPIKE
+### REACTIVE AEROSPIKE
  
  This is a pure Scala wrapper of the official "aerospike java client".
  
@@ -6,7 +6,7 @@
  
  Under the "model" package you can see a proposal for an handy "ORM-like" pattern 
 
-### Install Instructions
+#### Install Instructions
 
 Because the wrapper make use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the dirver yuo must:
 
