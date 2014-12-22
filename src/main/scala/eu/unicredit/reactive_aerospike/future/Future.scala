@@ -1,7 +1,6 @@
 package eu.unicredit.reactive_aerospike.future
 
 import scala.language.higherKinds
-import javax.xml.datatype.Duration
 
 trait Future[+T]  {
   def map[S](f: T => S): Future[S]
