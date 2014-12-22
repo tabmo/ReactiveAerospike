@@ -1,5 +1,4 @@
- REACTIVE AEROSPIKE
- ==================
+ # REACTIVE AEROSPIKE
  
  This is a pure Scala wrapper of the official "aerospike java client".
  
