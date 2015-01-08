@@ -1,4 +1,4 @@
-### REACTIVE AEROSPIKE
+
  
  This is a pure Scala FUNCTIONAL and TYPE SAFE wrapper of the "aerospike java client".
  No more explicit cast and "asInstanceOf" in client code are needed!
@@ -9,7 +9,7 @@
 
 #### Install Instructions
 
-Because the wrapper make use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the dirver yuo must:
+Because the wrapper make use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the driver yuo must:
 
 ```bash
 git clone https://github.com/andreaTP/aerospike-client-java.git
