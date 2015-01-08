@@ -9,7 +9,7 @@
 
 #### Install Instructions
 
-Because the wrapper make use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the driver yuo must:
+Because the wrapper make use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the driver you must:
 
 ```bash
 git clone https://github.com/andreaTP/aerospike-client-java.git
