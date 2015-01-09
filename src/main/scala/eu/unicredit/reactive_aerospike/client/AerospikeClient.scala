@@ -26,6 +26,7 @@ import eu.unicredit.reactive_aerospike.future._
 import scala.annotation.tailrec
 import java.util.HashSet
 import com.aerospike.client.async.MaxCommandAction
+import com.aerospike.client.AerospikeException
 
 class AerospikeClient(hosts: Host*)
 					 (implicit 
@@ -47,8 +48,12 @@ class AerospikeClient(hosts: Host*)
 		   factory: Factory) =
     this(new Host(hostname, port))(factory = factory)   
     
+  def checkConnection = 
+    if (!cluster.isConnected()) throw new AerospikeException("AerospikeClient not connected to cluster")
+    
 	def put[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
+    	checkConnection
 	  	implicit val converter = key.converter
 	  	val wl = AerospikeWriteListener()
 		super.put(wpolicy, wl, key.inner, bins.map(_.inner):_*)
@@ -57,6 +62,7 @@ class AerospikeClient(hosts: Host*)
    
 	def append[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
+    	checkConnection
 	  	implicit val converter = key.converter
 	  	val wl = AerospikeWriteListener()
 		super.append(wpolicy, wl, key.inner, bins.map(_.inner):_*)
@@ -65,6 +71,7 @@ class AerospikeClient(hosts: Host*)
 	
 	def prepend[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[_]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
+	    checkConnection
 	  	implicit val converter = key.converter
 	  	val wl = AerospikeWriteListener()
 		super.prepend(wpolicy, wl, key.inner, bins.map(_.inner):_*)
@@ -73,6 +80,7 @@ class AerospikeClient(hosts: Host*)
 	
   	def delete[K](key: AerospikeKey[K])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[Tuple2[AerospikeKey[K], Boolean]] = {
+  	    checkConnection
   	  	implicit val converter = key.converter
 	  	val dl = AerospikeDeleteListener()
 		super.delete(wpolicy, dl, key.inner)
@@ -81,6 +89,7 @@ class AerospikeClient(hosts: Host*)
   	
   	def touch[K](key: AerospikeKey[K])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
+  	    checkConnection
   	  	implicit val converter = key.converter
 	  	val wl = AerospikeWriteListener()
 		super.touch(wpolicy, wl, key.inner)
@@ -89,6 +98,7 @@ class AerospikeClient(hosts: Host*)
 
   	def exists[K](key: AerospikeKey[K])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[Tuple2[AerospikeKey[K], Boolean]] = {
+  	    checkConnection
   	  	implicit val converter = key.converter
 	  	val el = AerospikeExistsListener()
 		super.exists(wpolicy, el, key.inner)
@@ -99,6 +109,7 @@ class AerospikeClient(hosts: Host*)
 	 */
   	def add[K](key: AerospikeKey[K], bins: Seq[AerospikeBin[Long]])
 			(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
+  	    checkConnection
   	  	implicit val converter = key.converter
 	  	val wl = AerospikeWriteListener()
 		super.add(wpolicy, wl, key.inner, bins.map(_.inner):_*)
@@ -107,6 +118,7 @@ class AerospikeClient(hosts: Host*)
   	
    	def get(key: AerospikeKey[_], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
+   	    checkConnection
 	  	implicit val keyConverter = key.converter 
 	  	val rl = AerospikeReadListener(recordReader)
 	  	super.get(rpolicy,rl,key.inner)
@@ -115,6 +127,7 @@ class AerospikeClient(hosts: Host*)
    	
    def getBins(key: AerospikeKey[_], binNames: Seq[String], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
+        checkConnection
 	  	implicit val keyConverter = key.converter 
 	  	val rl = AerospikeReadListener(recordReader)
 	  	super.get(rpolicy,rl,key.inner,binNames:_*)
@@ -123,6 +136,7 @@ class AerospikeClient(hosts: Host*)
    
    def getHeader(key: AerospikeKey[_], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[(AerospikeKey[_], AerospikeRecord)] = {
+        checkConnection
 	  	implicit val keyConverter = key.converter 
 	  	val rl = AerospikeReadListener(recordReader)
 	  	super.getHeader(rpolicy,rl,key.inner)
@@ -134,6 +148,7 @@ class AerospikeClient(hosts: Host*)
     */
    def getMulti[T](keys: Seq[AerospikeKey[T]], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+        checkConnection
 	  	implicit val keyConverter = keys(0).converter 
 	  	val rl = AerospikeMultipleReadListener(recordReader)
 	  	super.get(rpolicy,rl,keys.map(_.inner).toArray)
@@ -145,6 +160,7 @@ class AerospikeClient(hosts: Host*)
     */   
    def getMultiDifferent(keys_record_readers: Seq[(AerospikeKey[_], AerospikeRecordReader)])
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+        checkConnection
 	  	val rl = AerospikeMultipleDifferentReadListener(keys_record_readers.map(x => (x._1.converter, x._2)))
 	  	super.get(rpolicy,rl,keys_record_readers.map(_._1.inner).toArray)
 	  	rl.result.map(x => x.key_records)
@@ -155,6 +171,7 @@ class AerospikeClient(hosts: Host*)
     */
    def getMultiBins[T](keys: Seq[AerospikeKey[T]], binNames: Seq[String], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+        checkConnection
 	  	implicit val keyConverter = keys(0).converter 
 	  	val rl = AerospikeMultipleReadListener(recordReader)
 	  	super.get(rpolicy,rl,keys.map(_.inner).toArray, binNames:_*)
@@ -166,6 +183,7 @@ class AerospikeClient(hosts: Host*)
    */
    def getMultiHeader[T](keys: Seq[AerospikeKey[T]], recordReader: AerospikeRecordReader)
    			(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+        checkConnection
 	  	implicit val keyConverter = keys(0).converter 
 	  	val rl = AerospikeMultipleReadListener(recordReader)
 	  	super.getHeader(rpolicy,rl,keys.map(_.inner).toArray)
@@ -174,6 +192,7 @@ class AerospikeClient(hosts: Host*)
   
   def queryEqual[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filter: AerospikeBin[_])
   			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+      checkConnection
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
 	  statement.setSetName(key_stub.setName)
@@ -188,6 +207,7 @@ class AerospikeClient(hosts: Host*)
   
   def queryRange[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filterBinName: String, rangeMin: Long, rangeMax: Long)
   			(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+      checkConnection
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
 	  statement.setSetName(key_stub.setName)
