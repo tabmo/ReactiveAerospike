@@ -47,7 +47,7 @@ class AerospikeClient(hosts: Host*)
   def this(hostname: String, port: Int,
 		   factory: Factory) =
     this(new Host(hostname, port))(factory = factory)   
-    
+   
   def checkConnection = 
     if (!cluster.isConnected()) throw new AerospikeException("AerospikeClient not connected to cluster")
     
@@ -195,7 +195,8 @@ class AerospikeClient(hosts: Host*)
       checkConnection
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
-	  statement.setSetName(key_stub.setName)
+	  if (key_stub.setName.isDefined)
+		  statement.setSetName(key_stub.setName.get)
 	  
 	  statement.setFilters(Filter.equal(filter.name , filter.value.inner))
 	  
@@ -210,8 +211,9 @@ class AerospikeClient(hosts: Host*)
       checkConnection
 	  val statement = new Statement()
 	  statement.setNamespace(key_stub.namespace)
-	  statement.setSetName(key_stub.setName)
-	  
+	  if (key_stub.setName.isDefined)
+		  statement.setSetName(key_stub.setName.get)
+		  
 	  statement.setFilters(
 	      Filter.range(filterBinName, 
 	    		  	   rangeMin,

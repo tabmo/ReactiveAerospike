@@ -46,9 +46,7 @@ class BasicUsage extends FlatSpec {
       
       val res = Await.result(putted, 100 millis)
       
-      assert{ key.namespace == res.namespace }
-      assert{ key.setName  == res.setName  }
-      assert{ key.userKey == res.userKey }
+      assert{ key == res}
   } 
   
   it should "retrieve the record" in {
@@ -61,9 +59,7 @@ class BasicUsage extends FlatSpec {
     
     val res = Await.result(getted, 100 millis)
     
-    assert{ key.namespace == res._1.namespace }
-    assert{ key.setName  == res._1.setName  }
-    assert{ key.userKey == res._1.userKey }
+    assert{ key == res._1 }
     assert{ uno == res._2.get[Double]("uno").get.base }
     assert{ due == res._2.get[Long]("due").get.base }
     assert{ tre == res._2.get[String]("tre").get.base }
@@ -84,21 +80,17 @@ class BasicUsage extends FlatSpec {
       
       val put = Await.result(putted, 100 millis)
       
-      assert{ key.namespace == put.namespace }
-      assert{ key.setName  == put.setName  }
-      assert{ key.userKey == put.userKey }
+      assert{ key == put }
       
       val reader = AerospikeRecordReader(
     	Map(("aList" -> listReader(AerospikeListReader[Int]())),
     		("aMap" -> mapReader[String,Int])) )
         
-      val getted = client.get(key, reader)
+      val getted = client.get(put, reader)
     
       val get = Await.result(getted, 100 millis)
     
-      assert{ key.namespace == get._1.namespace }
-      assert{ key.setName  == get._1.setName  }
-      assert{ key.userKey == get._1.userKey }
+      assert{ key == get._1 }
       assert{ 4 == get._2.get[List[AerospikeList[Int]]]("aList").get.base(1).base(0).base }
       assert{ 2 == get._2.get[Map[AerospikeString, AerospikeInt]]("aMap").get.base.map(x => x._1.base -> x._2.base).get("due").get  }
   }

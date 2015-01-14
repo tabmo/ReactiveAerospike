@@ -13,21 +13,19 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.model
-
-import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeValue}
-
-abstract class ModelObj[K](_digest: Array[Byte], _dao: Dao[K,_]) {
-
-  val getDigest = _digest 
-    
-  val dao: Dao[K,_] = _dao
-  
-}
-
-abstract class OriginalKeyModelObj[K](_key: AerospikeValue[K], _dao: OriginalKeyDao[K,_]) extends
-	ModelObj[K](AerospikeKey.computeDigest(_dao.setName, _key),_dao) {
-  
-  def getKey = AerospikeKey(dao.namespace, dao.setName, _key, _dao.keyConverter)
-  
+package eu.unicredit.reactive_aerospike.tests.model
+ 
+trait EqualPerson {
+  self: Person =>
+  override def equals(p2: Any) = {
+    p2 match {
+      case per: Person =>
+        (
+          per.id == self.id &&
+          per.name == self.name &&
+          per.surname == self.surname &&
+          per.age == self.age)
+      case _ => false
+    }
+  }
 }

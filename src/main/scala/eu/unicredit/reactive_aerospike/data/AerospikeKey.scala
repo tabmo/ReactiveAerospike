@@ -18,37 +18,105 @@ package eu.unicredit.reactive_aerospike.data
 import com.aerospike.client.Key
 import scala.language.existentials
 import AerospikeValue.AerospikeValueConverter
+import AerospikeValue.AerospikeNull
 
 case class AerospikeKey[T <: Any](
     namespace: String,
-    setName: String,
-    userKey: AerospikeValue[T],
-    converter: AerospikeValueConverter[T]) {
+    digest: Array[Byte],
+    originalSetName: Option[String] = None,
+    originalUserKey: Option[AerospikeValue[T]] = None
+    )(implicit _converter: AerospikeValueConverter[T]) {
   
-  val inner = new Key(namespace, setName, userKey)
+  val setName = originalSetName
+  val userKey = originalUserKey
+  
+  val converter = _converter
+    
+  val inner = new Key(namespace, digest, setName.getOrElse(null),
+      {	try {
+	  		converter.toAsV(userKey.get)
+      } catch {
+        case _ : Throwable => AerospikeNull()
+      }
+      }
+  )
+  
+  override def equals(x: Any) = {
+    x match {
+      case ak: AerospikeKey[T] =>
+        this.inner == ak.inner 
+      case _ => false
+    }
+  }
 
 }
 
 object AerospikeKey {
+  
+  def computeDigest[T <: Any](setName: String, key: AerospikeValue[T]) =
+    Key.computeDigest(setName, key.inner)
 
   def apply[T <: Any](namespace: String,
     setName: String,
     userKey: T)
-  	(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
+  	(implicit converter:AerospikeValueConverter[T]): AerospikeKey[T] =
     AerospikeKey(
       namespace,
-      setName,
-      converter.toAsV(userKey),
-      converter
-    )
+      computeDigest(setName,
+      converter.toAsV(userKey)),
+      Some(setName),Some(converter.toAsV(userKey)))(converter)
 
-  def apply[T <: Any](key: Key)
-  	(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
+   def apply[T <: Any](key: Key)
+   	(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
     AerospikeKey(
       key.namespace,
-      key.setName,
-      converter.fromValue(key.userKey),
-      converter
-      )
+      key.digest,
+      {if (key.setName != null) Some(key.setName)
+      else None},
+      {try 
+        Some(converter.fromValue(key.userKey))
+      catch {
+        case _ : Throwable => None
+      }})(converter)
+      
+  def apply[T <: Any](namespace: String,
+    digest: Array[Byte],
+  	converter: AerospikeValueConverter[T]): AerospikeKey[T] =
+    AerospikeKey(
+      namespace,
+      digest,
+      None,None
+    )(converter)
 
+  def apply[T <: Any](namespace: String,
+    setName: String,
+    digest: Array[Byte])(
+  	implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
+    AerospikeKey(
+      namespace,
+      digest,
+      Some(setName),None
+    )(converter)
+    
+  /*
+  def apply[T <: Any](namespace: String,
+    digest: Array[Byte]): AerospikeKey[T] =
+    AerospikeKey(
+      namespace,
+      digest,
+      None,
+      None
+    )*/
+    
+  def apply[T <: Any](
+    namespace: String,
+    setName: String,
+    userKey: AerospikeValue[T],
+    converter: AerospikeValueConverter[T]): AerospikeKey[T] =
+    AerospikeKey(
+      namespace,
+      computeDigest(setName,
+      userKey),
+      Some(setName),Some(userKey))(converter)
+      
 }
