@@ -43,7 +43,7 @@ case class PersonDao(client: AerospikeClient) extends OriginalKeyDao[String, Per
     (key: AerospikeKey[String], record: AerospikeRecord) =>
       Person(
         key.userKey.get,
-        record.get[String]("name").get,
-        record.get[String]("surname").get,
-        record.get[Int]("age").get)(this)
+        record.get("name").get,
+        record.get("surname").get,
+        record.get("age").get)
 }

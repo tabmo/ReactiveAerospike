@@ -121,7 +121,7 @@ case class AerospikeReadListener[T <: Any]
   
 	def onSuccess(key: Key, record: Record) = {
 	  if (record==null)
-	    	promise.failure(new AerospikeException(s"Selected key: $key not found"))
+	    	promise.failure(new AerospikeException(s"Key not found: $key"))
 	  else {
 		try {
 		  val ar =
@@ -131,8 +131,8 @@ case class AerospikeReadListener[T <: Any]
   			  AerospikeKey(key), ar))
 		} catch {
 	    	case err: Throwable => 
-	    	  err.printStackTrace();
-	    	  promise.failure(new AerospikeException(s"Cannot deserialize record for key: $key"))
+	    	  //err.printStackTrace();
+	    	  promise.failure(new AerospikeException(err))
 		}
   	  
 	  }
@@ -165,8 +165,8 @@ case class AerospikeMultipleReadListener[T <: Any]
   			  results))
 		} catch {
 	    	case err: Throwable => 
-	    	  err.printStackTrace();
-	    	  promise.failure(new AerospikeException(s"Cannot deserialize multiple records"))
+	    	  //err.printStackTrace();
+	    	  promise.failure(new AerospikeException(err))
 		}
   	}
 	
@@ -199,8 +199,8 @@ case class AerospikeMultipleDifferentReadListener[T <: Any]
   			  results.toSeq))
 		} catch {
 	    	case err: Throwable => 
-	    	  err.printStackTrace();
-	    	  promise.failure(new AerospikeException(s"Cannot deserialize multiple records"))
+	    	  //err.printStackTrace();
+	    	  promise.failure(new AerospikeException(err))
 		}
   	}
 	

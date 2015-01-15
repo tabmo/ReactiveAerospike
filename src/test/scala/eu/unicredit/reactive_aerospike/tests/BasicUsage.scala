@@ -59,10 +59,14 @@ class BasicUsage extends FlatSpec {
     
     val res = Await.result(getted, 100 millis)
     
+    val resUno: Double = res._2.get("uno").get
+    val resDue: Long = res._2.get("due").get
+    val resTre: String = res._2.get("tre").get
+    
     assert{ key == res._1 }
-    assert{ uno == res._2.get[Double]("uno").get.base }
-    assert{ due == res._2.get[Long]("due").get.base }
-    assert{ tre == res._2.get[String]("tre").get.base }
+    assert{ uno == resUno }
+    assert{ due == resDue }
+    assert{ tre == resTre }
   }
   
   it should "save and retrieve complex data" in {
@@ -91,6 +95,7 @@ class BasicUsage extends FlatSpec {
       val get = Await.result(getted, 100 millis)
     
       assert{ key == get._1 }
+      //Syntax have to be improved here... but engine works...
       assert{ 4 == get._2.get[List[AerospikeList[Int]]]("aList").get.base(1).base(0).base }
       assert{ 2 == get._2.get[Map[AerospikeString, AerospikeInt]]("aMap").get.base.map(x => x._1.base -> x._2.base).get("due").get  }
   }

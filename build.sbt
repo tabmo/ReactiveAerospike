@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "0.1.2-SNAPSHOT"
+version := "0.1.3-SNAPSHOT"
 
 organization := "eu.unicredit"
 

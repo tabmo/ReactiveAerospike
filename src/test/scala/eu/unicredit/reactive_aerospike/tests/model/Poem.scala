@@ -26,16 +26,19 @@ import eu.unicredit.reactive_aerospike.tests.crypt.AerospikeCryptValue._
 case class Poem(
         key: AerospikeKey[String],
         author: String,
+        title: String,
         text: String)
         (implicit dao: Dao[String, Poem])
         extends ModelObj[String](key.inner.digest, dao) {
 
   def this(keyS: String,
 		   author: String,
+		   title: String,
 		   text: String)
   		   (implicit dao: Dao[String, Poem]) =
     this(AerospikeKey[String](dao.namespace, dao.setName, keyS),
         author,
+        title,
         text)
  
 }
@@ -61,13 +64,15 @@ case class PoemDao(passwordString: Option[String], client: AerospikeClient = new
 	    	
 	   val objWrite: Seq[AerospikeBinProto[Poem, _]] =
 	   	Seq(("author", (p: Poem) => p.author),
+	   	    ("title", (p: Poem) => p.title),
 	   	    textBinProto)
 
 	   val objRead: (AerospikeKey[String], AerospikeRecord) => Poem =
 	   	(key: AerospikeKey[String], record: AerospikeRecord) =>
 	   		Poem(
 	   			key,
-	   			record.get[String]("author").get,
-	   			record.get[String]("text").get)(this)
+	   			record.get("author").get,
+	   			record.get("title").get,
+	   			record.get("text").get)
 	   				
 	}

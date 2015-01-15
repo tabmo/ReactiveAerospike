@@ -141,6 +141,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
         )
     }
 
+   implicit val implicitMe: Dao[K,T] = this
 }
 
 abstract class OriginalKeyDao[K <: Any,T <: OriginalKeyModelObj[K]]
@@ -181,5 +182,6 @@ abstract class OriginalKeyDao[K <: Any,T <: OriginalKeyModelObj[K]]
       else throw new Exception(s"Object with key $key does not exists")
     )
   }
-  
+
+  override implicit val implicitMe: OriginalKeyDao[K,T] = this
 }

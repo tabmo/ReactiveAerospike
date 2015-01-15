@@ -19,6 +19,7 @@ import com.aerospike.client.Value
 import com.aerospike.client.Value._
 import com.aerospike.client.util.Packer
 import com.aerospike.client.lua.LuaInstance
+import com.aerospike.client.command.ParticleType
 import scala.collection.JavaConverters._
 
 trait AerospikeValue[+T <: Any] extends Value {
@@ -69,7 +70,10 @@ object AerospikeValue {
   
   implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
     def toAsV(n: Null): AerospikeNull = AerospikeNull()
-    def fromValue(vi: Value): AerospikeNull = AerospikeNull() 
+    def fromValue(vn: Value): AerospikeNull = {
+      assert (vn.getType() == ParticleType.NULL)
+      AerospikeNull() 
+    }
   }
   
   case class AerospikeInt(i: Int)
@@ -80,7 +84,10 @@ object AerospikeValue {
   
   implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
     def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
-    def fromValue(vi: Value): AerospikeInt = AerospikeInt(vi.toInteger()) 
+    def fromValue(vi: Value): AerospikeInt = {
+      assert (vi.getType() == ParticleType.INTEGER)
+      AerospikeInt(vi.toInteger()) 
+    }
   }
   
   case class AerospikeLong(l: Long)
@@ -91,7 +98,10 @@ object AerospikeValue {
   
   implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
     def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
-    def fromValue(vi: Value): AerospikeLong = AerospikeLong(vi.toLong()) 
+    def fromValue(vi: Value): AerospikeLong = {
+      assert (vi.getType() == ParticleType.INTEGER)
+      AerospikeLong(vi.toLong()) 
+    }
   }
   
   case class AerospikeDouble(d: Double)
@@ -104,7 +114,10 @@ object AerospikeValue {
   
   implicit object AerospikeDoubleReader extends AerospikeValueConverter[Double] {
     def toAsV(d: Double): AerospikeDouble = AerospikeDouble(d)
-    def fromValue(vd: Value): AerospikeDouble = AerospikeDouble(java.lang.Double.longBitsToDouble(vd.toLong())) 
+    def fromValue(vd: Value): AerospikeDouble = {
+      assert (vd.getType() == ParticleType.INTEGER)
+      AerospikeDouble(java.lang.Double.longBitsToDouble(vd.toLong())) 
+    }
   }
   
   case class AerospikeString(s: String)
@@ -115,7 +128,10 @@ object AerospikeValue {
   
   implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
     def toAsV(s: String): AerospikeString = AerospikeString(s)
-    def fromValue(vs: Value): AerospikeString = AerospikeString(vs.toString)  
+    def fromValue(vs: Value): AerospikeString = {
+      assert (vs.getType() == ParticleType.STRING)
+      AerospikeString(vs.toString)  
+    }
   }
    
   case class AerospikeBlob(b: Array[Byte])
@@ -126,7 +142,10 @@ object AerospikeValue {
   
   implicit object AerospikeBlobReader extends AerospikeValueConverter[Array[Byte]] {
     def toAsV(ab: Array[Byte]): AerospikeBlob = AerospikeBlob(ab)
-    def fromValue(vb: Value): AerospikeBlob = AerospikeBlob(vb.getObject().asInstanceOf[Array[Byte]])  
+    def fromValue(vb: Value): AerospikeBlob = {
+      //assert (vb.getType() == ParticleType.BLOB)
+      AerospikeBlob(vb.getObject().asInstanceOf[Array[Byte]])  
+    }
   }
   
   case class AerospikeList[+T <: Any](l: List[AerospikeValue[T]])
@@ -153,6 +172,7 @@ object AerospikeValue {
     def toAsV(l: List[AerospikeValue[T]]): AerospikeList[T] = 
       AerospikeList(l)
     def fromValue(vl: Value): AerospikeList[T] = {
+      //assert (vl.getType() == ParticleType.JBLOB)
       try {
     	  val listRaw =
     		vl.getObject() match {
@@ -220,6 +240,7 @@ object AerospikeValue {
     def toAsV(m: Map[AerospikeValue[T1],AerospikeValue[T2]]): AerospikeMap[T1,T2] = 
       AerospikeMap(m)
     def fromValue(vm: Value): AerospikeMap[T1,T2] = {
+      //assert (vm.getType() == ParticleType.MAP)
       try {
     	  val mapRaw =
     		vm.getObject() match {
