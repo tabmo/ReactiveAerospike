@@ -80,5 +80,5 @@ package object data {
   //from map to Record Reader
   implicit def fromMapToARR(in: Map[String, AerospikeValueConverter[_]]): AerospikeRecordReader =
     	AerospikeRecordReader(in)
-    
+    	     
 }

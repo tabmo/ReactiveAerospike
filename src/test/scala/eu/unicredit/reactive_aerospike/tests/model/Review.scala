@@ -72,10 +72,10 @@ abstract class ReviewDao(client: AerospikeClient)
 	   	(key: AerospikeKey[String], record: AerospikeRecord) =>
 	   		Review(
 	   			key,
-	   			record.get("author").get,
-	   			record.get("title").get,
-	   			record.get("stars").get,
-	   			record.get("opinion").get)
+	   			record.get("author"),
+	   			record.get("title"),
+	   			record.get("stars"),
+	   			record.get("opinion"))
 }
 
 case class ReviewerReviewDao(publicKey: RSAPublicKey, 

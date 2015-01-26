@@ -28,7 +28,12 @@ class AerospikeRecord(
   
   def getBins = bins
   
-  def get[X](binName: String): Option[AerospikeValue[X]] = {
+  def get[X](binName: String): AerospikeValue[X] = {
+    getOpt[X](binName).getOrElse(
+        throw new Exception(s"Bin name ${binName} not found"))
+  }
+
+  def getOpt[X](binName: String): Option[AerospikeValue[X]] = {
     bins.find(bin => 
       	bin.name == binName
       	).map(bin =>

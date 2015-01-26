@@ -59,9 +59,9 @@ class BasicUsage extends FlatSpec {
     
     val res = Await.result(getted, 100 millis)
     
-    val resUno: Double = res._2.get("uno").get
-    val resDue: Long = res._2.get("due").get
-    val resTre: String = res._2.get("tre").get
+    val resUno: Double = res._2.get("uno")
+    val resDue: Long = res._2.get("due")
+    val resTre: String = res._2.get("tre")
     
     assert{ key == res._1 }
     assert{ uno == resUno }
@@ -96,8 +96,8 @@ class BasicUsage extends FlatSpec {
     
       assert{ key == get._1 }
       //Syntax have to be improved here... but engine works...
-      assert{ 4 == get._2.get[List[AerospikeList[Int]]]("aList").get.base(1).base(0).base }
-      assert{ 2 == get._2.get[Map[AerospikeString, AerospikeInt]]("aMap").get.base.map(x => x._1.base -> x._2.base).get("due").get  }
+      assert{ 4 == get._2.get[List[AerospikeList[Int]]]("aList").base(1).base(0).base }
+      assert{ 2 == get._2.get[Map[AerospikeString, AerospikeInt]]("aMap").base.map(x => x._1.base -> x._2.base).get("due").get  }
   }
 
 }

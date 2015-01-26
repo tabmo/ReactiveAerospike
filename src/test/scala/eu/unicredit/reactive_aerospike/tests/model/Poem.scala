@@ -71,8 +71,8 @@ case class PoemDao(passwordString: Option[String], client: AerospikeClient = new
 	   	(key: AerospikeKey[String], record: AerospikeRecord) =>
 	   		Poem(
 	   			key,
-	   			record.get("author").get,
-	   			record.get("title").get,
-	   			record.get("text").get)
+	   			record.get("author"),
+	   			record.get("title"),
+	   			record.get("text"))
 	   				
 	}
