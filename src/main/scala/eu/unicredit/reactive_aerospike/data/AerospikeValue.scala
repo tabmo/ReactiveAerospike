@@ -68,7 +68,7 @@ object AerospikeValue {
     override val base = null
   }
 
-  implicit object AerospikeNullReader extends AerospikeValueConverter[Null] {
+  implicit object AerospikeNullConverter extends AerospikeValueConverter[Null] {
     def toAsV(n: Null): AerospikeNull = AerospikeNull()
     def fromValue(vn: Value): AerospikeNull = {
       assert(vn.getType() == ParticleType.NULL)
@@ -82,7 +82,7 @@ object AerospikeValue {
     override val base = i
   }
 
-  implicit object AerospikeIntReader extends AerospikeValueConverter[Int] {
+  implicit object AerospikeIntConverter extends AerospikeValueConverter[Int] {
     def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
     def fromValue(vi: Value): AerospikeInt = {
       assert(vi.getType() == ParticleType.INTEGER)
@@ -96,7 +96,7 @@ object AerospikeValue {
     override val base = l
   }
 
-  implicit object AerospikeLongReader extends AerospikeValueConverter[Long] {
+  implicit object AerospikeLongConverter extends AerospikeValueConverter[Long] {
     def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
     def fromValue(vi: Value): AerospikeLong = {
       assert(vi.getType() == ParticleType.INTEGER)
@@ -112,7 +112,7 @@ object AerospikeValue {
       d.toString
   }
 
-  implicit object AerospikeDoubleReader extends AerospikeValueConverter[Double] {
+  implicit object AerospikeDoubleConverter extends AerospikeValueConverter[Double] {
     def toAsV(d: Double): AerospikeDouble = AerospikeDouble(d)
     def fromValue(vd: Value): AerospikeDouble = {
       assert(vd.getType() == ParticleType.INTEGER)
@@ -126,7 +126,7 @@ object AerospikeValue {
     override val base = s
   }
 
-  implicit object AerospikeStringReader extends AerospikeValueConverter[String] {
+  implicit object AerospikeStringConverter extends AerospikeValueConverter[String] {
     def toAsV(s: String): AerospikeString = AerospikeString(s)
     def fromValue(vs: Value): AerospikeString = {
       assert(vs.getType() == ParticleType.STRING)
@@ -140,7 +140,7 @@ object AerospikeValue {
     override val base = b
   }
 
-  implicit object AerospikeBlobReader extends AerospikeValueConverter[Array[Byte]] {
+  implicit object AerospikeBlobConverter extends AerospikeValueConverter[Array[Byte]] {
     def toAsV(ab: Array[Byte]): AerospikeBlob = AerospikeBlob(ab)
     def fromValue(vb: Value): AerospikeBlob = {
       //assert (vb.getType() == ParticleType.BLOB)
@@ -163,11 +163,11 @@ object AerospikeValue {
       AerospikeList(values.toList)
   }
 
-  implicit def listReader[T <: Any](implicit reader: AerospikeValueConverter[T]) = {
-    AerospikeListReader[T]()
+  implicit def listConverter[T <: Any](implicit converter: AerospikeValueConverter[T]) = {
+    AerospikeListConverter[T]()
   }
 
-  case class AerospikeListReader[T <: Any](implicit reader: AerospikeValueConverter[T])
+  case class AerospikeListConverter[T <: Any](implicit converter: AerospikeValueConverter[T])
       extends AerospikeValueConverter[List[AerospikeValue[T]]] {
     def toAsV(l: List[AerospikeValue[T]]): AerospikeList[T] =
       AerospikeList(l)
@@ -179,7 +179,7 @@ object AerospikeValue {
             case _listRaw: java.util.List[_] => _listRaw.asScala.toList
             case _ => throw new Exception("Data is not a list")
           }
-        val result = listRaw.map(elem => reader.fromValue(Value.get(elem)))
+        val result = listRaw.map(elem => converter.fromValue(Value.get(elem)))
         AerospikeList(result)
       } catch {
         case err: Throwable =>
@@ -203,9 +203,9 @@ object AerospikeValue {
       AerospikeMap(values.map(x => converter1.toAsV(x._1) -> converter2.toAsV(x._2)).toMap)
   }
 
-  implicit def mapReader[T1 <: Any, T2 <: Any](implicit reader1: AerospikeValueConverter[T1],
-    reader2: AerospikeValueConverter[T2]) = {
-    AerospikeMapReader[T1, T2]()
+  implicit def mapConverter[T1 <: Any, T2 <: Any](implicit converter1: AerospikeValueConverter[T1],
+    converter2: AerospikeValueConverter[T2]) = {
+    AerospikeMapConverter[T1, T2]()
   }
 
   /*
@@ -219,8 +219,8 @@ object AerospikeValue {
     val value = x2
   }
 
-  sealed class AerospikeTupleReader[T1 <: Any, T2 <: Any](implicit reader1: AerospikeValueConverter[T1],
-    reader2: AerospikeValueConverter[T2])
+  sealed class AerospikeTupleConverter[T1 <: Any, T2 <: Any](implicit converter1: AerospikeValueConverter[T1],
+    converter2: AerospikeValueConverter[T2])
       extends AerospikeValueConverter[Tuple2[T1, T2]] {
     def toAsV(t: Tuple2[T1, T2]): AerospikeTuple[T1, T2] =
       new AerospikeTuple(t._1, t._2)
@@ -228,8 +228,8 @@ object AerospikeValue {
       throw new Exception("Please parse separately key and value")
   }
 
-  case class AerospikeMapReader[T1 <: Any, T2 <: Any](implicit reader1: AerospikeValueConverter[T1],
-    reader2: AerospikeValueConverter[T2])
+  case class AerospikeMapConverter[T1 <: Any, T2 <: Any](implicit converter1: AerospikeValueConverter[T1],
+    converter2: AerospikeValueConverter[T2])
       extends AerospikeValueConverter[Map[AerospikeValue[T1], AerospikeValue[T2]]] {
     def toAsV(m: Map[AerospikeValue[T1], AerospikeValue[T2]]): AerospikeMap[T1, T2] =
       AerospikeMap(m)
@@ -242,7 +242,7 @@ object AerospikeValue {
             case _ => throw new Exception("Data is not a map")
           }
         val result = mapRaw.map(elem =>
-          (reader1.fromValue(Value.get(elem._1)) -> reader2.fromValue(Value.get(elem._2)))).toMap
+          (converter1.fromValue(Value.get(elem._1)) -> converter2.fromValue(Value.get(elem._2)))).toMap
         AerospikeMap(result)
       } catch {
         case err: Throwable =>

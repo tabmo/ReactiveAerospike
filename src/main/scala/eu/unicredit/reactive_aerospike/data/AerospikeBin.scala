@@ -39,13 +39,13 @@ object AerospikeBin {
   }
 
   def apply[T <: Any](name: String, value: AerospikeList[T])(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] = {
-    implicit val listConverter = AerospikeValue.listReader[T]
+    implicit val listConverter = AerospikeValue.listConverter[T]
     AerospikeBin(name, value, converter)
   }
 
   def apply[T1 <: Any, T2 <: Any](name: String, value: AerospikeMap[T1, T2])(implicit converter1: AerospikeValueConverter[T1],
     converter2: AerospikeValueConverter[T2]): AerospikeBin[(T1, T2)] = {
-    implicit val mapConverter = new AerospikeValue.AerospikeTupleReader[T1, T2]
+    implicit val mapConverter = new AerospikeValue.AerospikeTupleConverter[T1, T2]
     AerospikeBin(name, value, mapConverter)
   }
 

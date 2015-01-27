@@ -89,7 +89,7 @@ object AerospikeCryptValue {
       s.toString
   }
 
-  case class AerospikeAESStringReader(k: AESKey) extends AerospikeValueConverter[String] {
+  case class AerospikeAESStringConverter(k: AESKey) extends AerospikeValueConverter[String] {
     def toAsV(s: String): AerospikeAESString = AerospikeAESString(s, k)
     def fromValue(vs: Value): AerospikeAESString =
       AerospikeAESString(decrypt(vs.toString, k.key, AES), k)
@@ -106,7 +106,8 @@ object AerospikeCryptValue {
       new AerospikeRSAStringConverter(Some(privateK), Some(publicK))
   }
 
-  case class AerospikeRSAStringConverter(privateK: Option[RSAPrivateKey], publicK: Option[RSAPublicKey]) extends AerospikeValueConverter[String] {
+  case class AerospikeRSAStringConverter(privateK: Option[RSAPrivateKey],
+      publicK: Option[RSAPublicKey]) extends AerospikeValueConverter[String] {
     def toAsV(s: String): AerospikeString =
       if (publicK.isDefined)
         AerospikeString(asyncEncrypt(s, publicK.get.key, RSAxform))

@@ -34,6 +34,7 @@ case class PersonDao(client: AerospikeClient) extends OriginalKeyDao[String, Per
 
   val setName = "people"
 
+  import eu.unicredit.reactive_aerospike.data.AerospikeValue._
   val objWrite: Seq[AerospikeBinProto[Person, _]] =
     Seq(("name", (p: Person) => p.name),
       ("surname", (p: Person) => p.surname),

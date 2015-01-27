@@ -51,9 +51,9 @@ class BasicUsage extends FlatSpec {
 
   it should "retrieve the record" in {
     val reader = AerospikeRecordReader(
-      Map(("uno" -> AerospikeDoubleReader),
-        ("due" -> AerospikeLongReader),
-        ("tre" -> AerospikeStringReader)))
+      Map(("uno" -> AerospikeDoubleConverter),
+        ("due" -> AerospikeLongConverter),
+        ("tre" -> AerospikeStringConverter)))
 
     val getted = client.get(key, reader)
 
@@ -87,8 +87,8 @@ class BasicUsage extends FlatSpec {
     assert { key == put }
 
     val reader = AerospikeRecordReader(
-      Map(("aList" -> listReader(AerospikeListReader[Int]())),
-        ("aMap" -> mapReader[String, Int])))
+      Map(("aList" -> listConverter(AerospikeListConverter[Int]())),
+        ("aMap" -> mapConverter[String, Int])))
 
     val getted = client.get(put, reader)
 

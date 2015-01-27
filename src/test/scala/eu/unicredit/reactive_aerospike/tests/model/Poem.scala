@@ -57,9 +57,9 @@ case class PoemDao(passwordString: Option[String], client: AerospikeClient = new
 
   val textBinProto: AerospikeBinProto[Poem, String] =
     if (password.isDefined)
-      AerospikeBinProto[Poem, String]("text", (p: Poem) => AerospikeAESString(p.text, password.get).base, AerospikeAESStringReader(password.get))
+      AerospikeBinProto[Poem, String]("text", (p: Poem) => AerospikeAESString(p.text, password.get).base, AerospikeAESStringConverter(password.get))
     else
-      AerospikeBinProto[Poem, String]("text", (p: Poem) => p.text, AerospikeStringReader)
+      AerospikeBinProto[Poem, String]("text", (p: Poem) => p.text, AerospikeStringConverter)
 
   val objWrite: Seq[AerospikeBinProto[Poem, _]] =
     Seq(("author", (p: Poem) => p.author),
