@@ -106,12 +106,8 @@ class DaoUsage extends FlatSpec {
     val retP1 = Await.result(personDao.read(getKey(person1)), 100 millis)
     val retP2 = Await.result(personDao.read(getKey(person2)), 100 millis)
 
-    assert { person1.name == retP1.name }
-    assert { person1.surname == retP1.surname }
-    assert { person1.age == retP1.age }
-    assert { person2.name == retP2.name }
-    assert { person2.surname == retP2.surname }
-    assert { person2.age == retP2.age }
+    assert { person1 == retP1 }
+    assert { person2 == retP2 }
   }
 
 }

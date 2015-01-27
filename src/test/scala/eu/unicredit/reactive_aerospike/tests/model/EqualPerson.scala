@@ -36,7 +36,6 @@ trait EqualGenericPerson {
     p2 match {
       case per: GenericPerson =>
         (
-          per.id == self.id &&
           per.name == self.name &&
           per.surname == self.surname &&
           per.age == self.age)
