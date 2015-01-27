@@ -16,6 +16,8 @@
 package eu.unicredit.reactive_aerospike.tests
 
 import org.scalatest._
+import java.util.UUID
+
 import eu.unicredit.reactive_aerospike.tests.model._
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 
@@ -29,25 +31,31 @@ class DaoUsage extends FlatSpec {
 
     implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000))
 
-    val person1 = Person("tkey", "Tizio", "tizio", 23)
-    val person2 = Person("ckey", "Caio", "caio", 32)
+    val bob = Person("rOBerT", "Bob", "Wood", 23)
+    val tim = Person("TImoTHy", "Tim", "Forest", 32)
 
+    //cleanup
     try {
-      Await.result(personDao.delete("tkey"), 100 millis)
-      Await.result(personDao.delete("ckey"), 100 millis)
+      Await.result(personDao.delete("rOBerT"), 100 millis)
+      Await.result(personDao.delete("TImoTHy"), 100 millis)
     } catch {
       case _: Throwable =>
     }
 
-    Await.result(personDao.create(person1), 100 millis)
-    Await.result(personDao.create(person2), 100 millis)
+    //creating
+    Await.result(personDao.create(bob), 100 millis)
+    Await.result(personDao.create(tim), 100 millis)
 
-    val retP1 = Await.result(personDao.read("tkey"), 100 millis)
-    val retP2 = Await.result(personDao.read("ckey"), 100 millis)
+    val res1 = Await.result(
+      personDao.read("rOBerT"),
+      100 millis)
 
-    assert { person1 == retP1 }
-    assert { person2 == retP2 }
+    val res2 = Await.result(
+      personDao.read("TImoTHy"),
+      100 millis)
 
+    assert { bob == res1 }
+    assert { tim == res2 }
   }
 
   it should "save and retrieve a person with Twitter Futures" in {
@@ -57,24 +65,25 @@ class DaoUsage extends FlatSpec {
 
     implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000, TwitterFactory))
 
-    val person1 = Person("tkey", "Tizio", "tizio", 23)
-    val person2 = Person("ckey", "Caio", "caio", 32)
+    val john = Person("joHn", "John", "Doe", 23)
+    val carl = Person("cARL", "Carl", "Green", 32)
 
+    //cleanup
     try {
-      Await.result(personDao.delete("tkey"), 500.millis)
-      Await.result(personDao.delete("ckey"), 500.millis)
+      Await.result(personDao.delete("joHn"), 500.millis)
+      Await.result(personDao.delete("cARL"), 500.millis)
     } catch {
       case _: Throwable =>
     }
 
-    Await.result(personDao.create(person1), 500.millis)
-    Await.result(personDao.create(person2), 100.millis)
+    Await.result(personDao.create(john), 500.millis)
+    Await.result(personDao.create(carl), 100.millis)
 
-    val retP1 = Await.result(personDao.read("tkey"), 100.millis)
-    val retP2 = Await.result(personDao.read("ckey"), 100.millis)
+    val res1 = Await.result(personDao.read("joHn"), 100.millis)
+    val res2 = Await.result(personDao.read("cARL"), 100.millis)
 
-    assert { person1 == retP1 }
-    assert { person2 == retP2 }
+    assert { john == res1 }
+    assert { carl == res2 }
   }
 
   it should "save and retrieve generic case classes" in {
@@ -87,27 +96,27 @@ class DaoUsage extends FlatSpec {
 
     implicit val personDao = GenericPersonDao(new AerospikeClient("localhost", 3000))
 
-    val person1 = GenericPerson("tkey", "Tizio", "tizio", 23)
-    val person2 = GenericPerson("ckey", "Caio", "caio", 32)
+    val john = GenericPerson("joHn", "Tizio", "tizio", 23)
+    val carl = GenericPerson("cARL", "Caio", "caio", 32)
 
-    def getKey(ap: GenericPerson): AerospikeKey[String] =
+    def gejoHn(ap: GenericPerson): AerospikeKey[String] =
       AerospikeKey(personDao.namespace, personDao.setName, ap.id)
 
     try {
-      Await.result(personDao.delete(getKey(person1)), 100 millis)
-      Await.result(personDao.delete(getKey(person2)), 100 millis)
+      Await.result(personDao.delete(gejoHn(john)), 100 millis)
+      Await.result(personDao.delete(gejoHn(carl)), 100 millis)
     } catch {
       case _: Throwable =>
     }
 
-    Await.result(personDao.create(person1), 100 millis)
-    Await.result(personDao.create(person2), 100 millis)
+    Await.result(personDao.create(john), 100 millis)
+    Await.result(personDao.create(carl), 100 millis)
 
-    val retP1 = Await.result(personDao.read(getKey(person1)), 100 millis)
-    val retP2 = Await.result(personDao.read(getKey(person2)), 100 millis)
+    val retP1 = Await.result(personDao.read(gejoHn(john)), 100 millis)
+    val retP2 = Await.result(personDao.read(gejoHn(carl)), 100 millis)
 
-    assert { person1 == retP1 }
-    assert { person2 == retP2 }
+    assert { john == retP1 }
+    assert { carl == retP2 }
   }
 
 }

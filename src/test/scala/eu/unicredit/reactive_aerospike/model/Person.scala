@@ -25,7 +25,6 @@ case class Person(
   surname: String,
   age: Int)(implicit dao: OriginalKeyDao[String, Person])
     extends OriginalKeyModelObj[String](id, dao) with EqualPerson {
-
 }
 
 case class PersonDao(client: AerospikeClient) extends OriginalKeyDao[String, Person](client) {
@@ -76,4 +75,32 @@ case class GenericPersonDao(client: AerospikeClient) extends Dao[String, Generic
         record.get("name"),
         record.get("surname"),
         record.get("age"))
+}
+
+trait EqualPerson {
+  self: Person =>
+  override def equals(p2: Any) = {
+    p2 match {
+      case per: Person =>
+        (per.id == self.id &&
+          per.name == self.name &&
+          per.surname == self.surname &&
+          per.age == self.age)
+      case _ => false
+    }
+  }
+}
+
+trait EqualGenericPerson {
+  self: GenericPerson =>
+  override def equals(p2: Any) = {
+    p2 match {
+      case per: GenericPerson =>
+        (
+          per.name == self.name &&
+          per.surname == self.surname &&
+          per.age == self.age)
+      case _ => false
+    }
+  }
 }
