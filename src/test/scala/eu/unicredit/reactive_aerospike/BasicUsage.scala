@@ -94,8 +94,8 @@ class BasicUsage extends FlatSpec {
     assert { key == aKey }
 
     //expliciting the implicits just to show them
-    implicit val listConverter = AerospikeValue.listConverter[Int]
-    implicit val mapConverter = new AerospikeValue.AerospikeTupleConverter[String, Int]
+    implicit val listConverter = AerospikeListConverter()(AerospikeListConverter()(AerospikeIntConverter))
+    implicit val mapConverter = AerospikeMapConverter()(AerospikeStringConverter, AerospikeIntConverter)
 
     val recordReader = AerospikeRecordReader(
       Map(("myListOfLists" -> listConverter), ("myMap" -> mapConverter)))
@@ -106,8 +106,8 @@ class BasicUsage extends FlatSpec {
 
     assert { key == theKey }
     //Syntax have to be improved here... but engine works...
-    assert { 4 == theRecord.get[List[AerospikeList[Int]]]("aList").base(1).base(0).base }
-    assert { 2 == theRecord.get[Map[AerospikeString, AerospikeInt]]("aMap").base.map(x => x._1.base -> x._2.base).get("due").get }
+    assert { 4 == theRecord.get[List[AerospikeList[Int]]]("myListOfLists").base(1).base(0).base }
+    assert { 2 == theRecord.get[Map[AerospikeString, AerospikeInt]]("myMap").base.map(x => x._1.base -> x._2.base).get("two").get }
   }
 
 }
