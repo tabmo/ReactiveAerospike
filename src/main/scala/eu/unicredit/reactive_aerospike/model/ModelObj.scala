@@ -15,19 +15,18 @@
 
 package eu.unicredit.reactive_aerospike.model
 
-import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeValue}
+import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeValue }
 
-abstract class ModelObj[K](_digest: Array[Byte], _dao: Dao[K,_]) {
+abstract class ModelObj[K](_digest: Array[Byte], _dao: Dao[K, _]) {
 
-  val getDigest = _digest 
-    
-  val dao: Dao[K,_] = _dao
-  
+  val getDigest = _digest
+
+  val dao: Dao[K, _] = _dao
+
 }
 
-abstract class OriginalKeyModelObj[K](_key: AerospikeValue[K], _dao: OriginalKeyDao[K,_]) extends
-	ModelObj[K](AerospikeKey.computeDigest(_dao.setName, _key),_dao) {
-  
+abstract class OriginalKeyModelObj[K](_key: AerospikeValue[K], _dao: OriginalKeyDao[K, _]) extends ModelObj[K](AerospikeKey.computeDigest(_dao.setName, _key), _dao) {
+
   def getKey = AerospikeKey(dao.namespace, dao.setName, _key, _dao.keyConverter)
-  
+
 }

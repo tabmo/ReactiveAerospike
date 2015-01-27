@@ -20,63 +20,98 @@ import eu.unicredit.reactive_aerospike.tests.model._
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 
 class DaoUsage extends FlatSpec {
-  
-  "An Aerospike Client" should "save and retrieve a person using Scala Futures " in {
-	   import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
-	   import scala.concurrent.Await
-	   import scala.concurrent.duration._
-	   import scala.concurrent.ExecutionContext.Implicits.global
-     
-	   implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000))
-	   
-	   val person1 = Person("tkey","Tizio", "tizio", 23)
-	   val person2 = Person("ckey","Caio", "caio", 32)
-	   
-	   try {
-		   Await.result(personDao.delete("tkey"), 100 millis)
-		   Await.result(personDao.delete("ckey"), 100 millis)
-	   } catch {
-	     case _ : Throwable => 
-	   }
-	   
-	   Await.result(personDao.create(person1), 100 millis)
-	   Await.result(personDao.create(person2), 100 millis)
-	   
-	   val retP1 = Await.result(personDao.read("tkey"), 100 millis)
-	   val retP2 = Await.result(personDao.read("ckey"), 100 millis)
-	   
-	   assert { person1 == retP1 }
-	   assert { person2 == retP2 }
 
-   }
-   
-   it should "save and retrieve a person with Twitter Futures" in {
-	   import com.twitter.conversions.time._
-	   import com.twitter.util._
-	   import eu.unicredit.reactive_aerospike.tests.TwitterFactory.Helpers._
-	   
-	   implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000, TwitterFactory))
-	   
-	   val person1 = Person("tkey","Tizio", "tizio", 23)
-	   val person2 = Person("ckey","Caio", "caio", 32)
-	   
-	   try {
-		   Await.result(personDao.delete("tkey"),500.millis)
-		   Await.result(personDao.delete("ckey"),500.millis)
-	   } catch {
-	     case _ : Throwable => 
-	   }
-	   
-	   Await.result(personDao.create(person1),500.millis)
-	   Await.result(personDao.create(person2),100.millis)
-	   
-	   val retP1 = Await.result(personDao.read("tkey"),100.millis)
-	   val retP2 = Await.result(personDao.read("ckey"),100.millis)
-	   
-	   assert { person1 == retP1 }
-	   assert { person2 == retP2 }
-   } 
-    
-   
-   	
+  "An Aerospike Client" should "save and retrieve a person using Scala Futures " in {
+    import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+    import scala.concurrent.Await
+    import scala.concurrent.duration._
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000))
+
+    val person1 = Person("tkey", "Tizio", "tizio", 23)
+    val person2 = Person("ckey", "Caio", "caio", 32)
+
+    try {
+      Await.result(personDao.delete("tkey"), 100 millis)
+      Await.result(personDao.delete("ckey"), 100 millis)
+    } catch {
+      case _: Throwable =>
+    }
+
+    Await.result(personDao.create(person1), 100 millis)
+    Await.result(personDao.create(person2), 100 millis)
+
+    val retP1 = Await.result(personDao.read("tkey"), 100 millis)
+    val retP2 = Await.result(personDao.read("ckey"), 100 millis)
+
+    assert { person1 == retP1 }
+    assert { person2 == retP2 }
+
+  }
+
+  it should "save and retrieve a person with Twitter Futures" in {
+    import com.twitter.conversions.time._
+    import com.twitter.util._
+    import eu.unicredit.reactive_aerospike.tests.TwitterFactory.Helpers._
+
+    implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000, TwitterFactory))
+
+    val person1 = Person("tkey", "Tizio", "tizio", 23)
+    val person2 = Person("ckey", "Caio", "caio", 32)
+
+    try {
+      Await.result(personDao.delete("tkey"), 500.millis)
+      Await.result(personDao.delete("ckey"), 500.millis)
+    } catch {
+      case _: Throwable =>
+    }
+
+    Await.result(personDao.create(person1), 500.millis)
+    Await.result(personDao.create(person2), 100.millis)
+
+    val retP1 = Await.result(personDao.read("tkey"), 100.millis)
+    val retP2 = Await.result(personDao.read("ckey"), 100.millis)
+
+    assert { person1 == retP1 }
+    assert { person2 == retP2 }
+  }
+
+  it should "save and retrieve generic case classes" in {
+    import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+    import scala.concurrent.Await
+    import scala.concurrent.duration._
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    import eu.unicredit.reactive_aerospike.data.AerospikeKey
+
+    implicit val personDao = GenericPersonDao(new AerospikeClient("localhost", 3000))
+
+    val person1 = GenericPerson("tkey", "Tizio", "tizio", 23)
+    val person2 = GenericPerson("ckey", "Caio", "caio", 32)
+
+    def getKey(ap: GenericPerson): AerospikeKey[String] =
+      AerospikeKey(personDao.namespace, personDao.setName, ap.id)
+
+    try {
+      Await.result(personDao.delete(getKey(person1)), 100 millis)
+      Await.result(personDao.delete(getKey(person2)), 100 millis)
+    } catch {
+      case _: Throwable =>
+    }
+
+    Await.result(personDao.create(person1), 100 millis)
+    Await.result(personDao.create(person2), 100 millis)
+
+    val retP1 = Await.result(personDao.read(getKey(person1)), 100 millis)
+    val retP2 = Await.result(personDao.read(getKey(person2)), 100 millis)
+
+    assert { person1.name == retP1.name }
+    assert { person1.surname == retP1.surname }
+    assert { person1.age == retP1.age }
+    assert { person2.name == retP2.name }
+    assert { person2.surname == retP2.surname }
+    assert { person2.age == retP2.age }
+  }
+
 }

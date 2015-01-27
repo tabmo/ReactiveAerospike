@@ -16,7 +16,7 @@
 package eu.unicredit.reactive_aerospike.tests.model
 
 import eu.unicredit.reactive_aerospike.model._
-import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeRecord, AerospikeBinProto}
+import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeRecord, AerospikeBinProto }
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 import eu.unicredit.reactive_aerospike.data.AerospikeValue
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
@@ -24,55 +24,54 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 import eu.unicredit.reactive_aerospike.tests.crypt.AerospikeCryptValue._
 
 case class Poem(
-        key: AerospikeKey[String],
-        author: String,
-        title: String,
-        text: String)
-        (implicit dao: Dao[String, Poem])
-        extends ModelObj[String](key.inner.digest, dao) {
+  key: AerospikeKey[String],
+  author: String,
+  title: String,
+  text: String)(implicit dao: Dao[String, Poem])
+    extends ModelObj[String](key.inner.digest, dao) {
 
   def this(keyS: String,
-		   author: String,
-		   title: String,
-		   text: String)
-  		   (implicit dao: Dao[String, Poem]) =
+    author: String,
+    title: String,
+    text: String)(implicit dao: Dao[String, Poem]) =
     this(AerospikeKey[String](dao.namespace, dao.setName, keyS),
-        author,
-        title,
-        text)
- 
+      author,
+      title,
+      text)
+
 }
-	
-case class PoemDao(passwordString: Option[String], client: AerospikeClient = new AerospikeClient("localhost", 3000)) extends Dao[String, Poem](client) {
-	   val namespace = "test"
 
-	   val setName = "poems"
-	     
-	   val password = passwordString.map(AESKey(_))
-	           
-	   def text(content: String): AerospikeValue[String] = 
-	     if (password.isDefined)
-	    	 AerospikeAESString(content, password.get)
-	     else
-	    	 AerospikeString(content)
-	     
-	   val textBinProto: AerospikeBinProto[Poem, String] =
-	     if (password.isDefined)
-	    	 AerospikeBinProto[Poem, String]("text", (p: Poem) => AerospikeAESString(p.text ,password.get).base, AerospikeAESStringReader(password.get))
-	     else
-	    	 AerospikeBinProto[Poem, String]("text", (p: Poem) => p.text, AerospikeStringReader)    	 
-	    	
-	   val objWrite: Seq[AerospikeBinProto[Poem, _]] =
-	   	Seq(("author", (p: Poem) => p.author),
-	   	    ("title", (p: Poem) => p.title),
-	   	    textBinProto)
+case class PoemDao(passwordString: Option[String], client: AerospikeClient = new AerospikeClient("localhost", 3000))
+    extends DigestDao[String, Poem](client) {
+  val namespace = "test"
 
-	   val objRead: (AerospikeKey[String], AerospikeRecord) => Poem =
-	   	(key: AerospikeKey[String], record: AerospikeRecord) =>
-	   		Poem(
-	   			key,
-	   			record.get("author"),
-	   			record.get("title"),
-	   			record.get("text"))
-	   				
-	}
+  val setName = "poems"
+
+  val password = passwordString.map(AESKey(_))
+
+  def text(content: String): AerospikeValue[String] =
+    if (password.isDefined)
+      AerospikeAESString(content, password.get)
+    else
+      AerospikeString(content)
+
+  val textBinProto: AerospikeBinProto[Poem, String] =
+    if (password.isDefined)
+      AerospikeBinProto[Poem, String]("text", (p: Poem) => AerospikeAESString(p.text, password.get).base, AerospikeAESStringReader(password.get))
+    else
+      AerospikeBinProto[Poem, String]("text", (p: Poem) => p.text, AerospikeStringReader)
+
+  val objWrite: Seq[AerospikeBinProto[Poem, _]] =
+    Seq(("author", (p: Poem) => p.author),
+      ("title", (p: Poem) => p.title),
+      textBinProto)
+
+  val objRead: (AerospikeKey[String], AerospikeRecord) => Poem =
+    (key: AerospikeKey[String], record: AerospikeRecord) =>
+      Poem(
+        key,
+        record.get("author"),
+        record.get("title"),
+        record.get("text"))
+
+}

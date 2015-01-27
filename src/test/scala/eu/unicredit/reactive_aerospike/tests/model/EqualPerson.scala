@@ -14,12 +14,27 @@
 */
 
 package eu.unicredit.reactive_aerospike.tests.model
- 
+
 trait EqualPerson {
   self: Person =>
   override def equals(p2: Any) = {
     p2 match {
       case per: Person =>
+        (
+          per.id == self.id &&
+          per.name == self.name &&
+          per.surname == self.surname &&
+          per.age == self.age)
+      case _ => false
+    }
+  }
+}
+
+trait EqualGenericPerson {
+  self: GenericPerson =>
+  override def equals(p2: Any) = {
+    p2 match {
+      case per: GenericPerson =>
         (
           per.id == self.id &&
           per.name == self.name &&

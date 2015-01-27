@@ -31,3 +31,5 @@ publishMavenStyle := true
 parallelExecution in Test := false
 
 pomIncludeRepository := { x => false }
+
+scalariformSettings

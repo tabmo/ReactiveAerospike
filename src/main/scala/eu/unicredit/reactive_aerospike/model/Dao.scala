@@ -18,31 +18,31 @@ package eu.unicredit.reactive_aerospike.model
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-import eu.unicredit.reactive_aerospike.future.{Future, Promise}
+import eu.unicredit.reactive_aerospike.future.{ Future, Promise }
 import com.aerospike.client.policy._
 
-abstract class Dao[K <: Any,T <: ModelObj[K]]
-				  (client: AerospikeClient)
-				  (implicit _keyConverter: AerospikeValueConverter[K]) {
-  
+abstract class Dao[K <: Any, T <: Any](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) {
+
   val namespace: String
-  
+
   val setName: String
-  
-  val objWrite: Seq[AerospikeBinProto[T,_]]
-  val objRead: (AerospikeKey[K],AerospikeRecord) => T
-  
+
+  def getKeyDigest(obj: T): Array[Byte]
+
+  val objWrite: Seq[AerospikeBinProto[T, _]]
+  val objRead: (AerospikeKey[K], AerospikeRecord) => T
+
   def objBindingsMap(s: Seq[(String, AerospikeValueConverter[_])]) =
     s.toMap
-  
+
   lazy val objBindings: AerospikeRecordReader =
     objBindingsMap(objWrite.map(x => (x.name, x.converter)))
-    
+
   def fromObjToBinSeq(obj: T): Seq[AerospikeBin[_]] =
     objWrite.map(c =>
       c(obj)
     )
-  
+
   val defaultCreateWritePolicy = {
     val wp = new WritePolicy
     wp.recordExistsAction = RecordExistsAction.CREATE_ONLY
@@ -51,7 +51,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     wp.sendKey = false
     wp
   }
-  
+
   val defaultReadPolicy = {
     val rp = new Policy
     rp.priority = Priority.DEFAULT
@@ -60,7 +60,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     rp.sleepBetweenRetries = 100
     rp
   }
-  
+
   val defaultUpdateWritePolicy = {
     val wp = new WritePolicy
     wp.recordExistsAction = RecordExistsAction.UPDATE_ONLY
@@ -68,7 +68,7 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     wp.expiration = -1
     wp
   }
-  
+
   val defaultDeleteWritePolicy = {
     val wp = new WritePolicy
     wp.recordExistsAction = RecordExistsAction.UPDATE_ONLY
@@ -76,27 +76,27 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
     wp.expiration = -1
     wp
   }
-  
-  def getObjFromKeyRecord(kr: (AerospikeKey[_], AerospikeRecord)): T = 
+
+  def getObjFromKeyRecord(kr: (AerospikeKey[_], AerospikeRecord)): T =
     kr._1 match {
-        case foundKey: AerospikeKey[K] =>
-          try {
-          	objRead(foundKey,kr._2)
-      	  } catch {
-      	    case _ : Throwable => throw new Exception("Object not found or not deserializable")
-      	  }
-        case _ => throw new Exception("key is not of the secified type")
-      }
-  
+      case foundKey: AerospikeKey[K] =>
+        try {
+          objRead(foundKey, kr._2)
+        } catch {
+          case _: Throwable => throw new Exception("Object not found or not deserializable")
+        }
+      case _ => throw new Exception("key is not of the secified type")
+    }
+
   def getCreationKey: (T) => AerospikeKey[K] =
-    (obj) => AerospikeKey[K](namespace, setName, obj.getDigest)
-  
+    (obj) => AerospikeKey[K](namespace, setName, getKeyDigest(obj))
+
   def create(obj: T): Future[AerospikeKey[K]] = {
     client.put(
-        getCreationKey(obj),
-        fromObjToBinSeq(obj))(defaultCreateWritePolicy)
+      getCreationKey(obj),
+      fromObjToBinSeq(obj))(defaultCreateWritePolicy)
   }
-  
+
   def read(key: AerospikeKey[K]): Future[T] = {
     client.get(key, objBindings)(defaultReadPolicy).map(kr =>
       getObjFromKeyRecord(kr)
@@ -106,53 +106,58 @@ abstract class Dao[K <: Any,T <: ModelObj[K]]
   def update(key: AerospikeKey[K], obj: T): Future[AerospikeKey[K]] = {
     client.put(key, fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
   }
-  
+
   def delete(key: AerospikeKey[K]): Future[AerospikeKey[K]] = {
     client.delete(key)(defaultDeleteWritePolicy).map(akb =>
       if (akb._2) akb._1
       else throw new Exception(s"Object with key $key does not exists")
     )
   }
-  
-  def findOn(field: String, value: String): Future[Seq[T]] = 
+
+  def findOn(field: String, value: String): Future[Seq[T]] =
     findOn(AerospikeBin(field, value))
-  def findOn(field: String, value: Long): Future[Seq[T]] = 
+  def findOn(field: String, value: Long): Future[Seq[T]] =
     findOn(AerospikeBin(field, value))
-  private def findOn(bin : AerospikeBin[_]): Future[Seq[T]] =
+  private def findOn(bin: AerospikeBin[_]): Future[Seq[T]] =
     objBindings.getStub.find(b => b._1 == bin.name) match {
       case None =>
         throw new Exception("Cannot find selected field")
       case Some(proto) =>
         client.queryEqual(AerospikeKey(namespace, setName, ""), objBindings, bin).map(krs =>
           krs.map(kr =>
-        	getObjFromKeyRecord(kr)
+            getObjFromKeyRecord(kr)
           )
-        )    
+        )
     }
-  
-  def findWithin(field: String, minValue: Long, maxValue: Long): Future[Seq[T]] = 
+
+  def findWithin(field: String, minValue: Long, maxValue: Long): Future[Seq[T]] =
     objBindings.getStub.find(b => b._1 == field) match {
       case None => throw new Exception("Cannot find selected field")
       case Some(proto) =>
         client.queryRange(AerospikeKey(namespace, setName, ""), objBindings, field, minValue, maxValue).map(krs =>
           krs.map(kr =>
-        	getObjFromKeyRecord(kr)
+            getObjFromKeyRecord(kr)
           )
         )
     }
 
-   implicit val implicitMe: Dao[K,T] = this
+  implicit val implicitMe: Dao[K, T] = this
 }
 
-abstract class OriginalKeyDao[K <: Any,T <: OriginalKeyModelObj[K]]
-				  (client: AerospikeClient)
-				  (implicit _keyConverter: AerospikeValueConverter[K]) extends Dao[K,T](client) {
-  
+abstract class DigestDao[K <: Any, T <: ModelObj[K]](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) extends Dao[K, T](client) {
+
+  override def getKeyDigest(obj: T): Array[Byte] =
+    obj.getDigest
+
+}
+
+abstract class OriginalKeyDao[K <: Any, T <: OriginalKeyModelObj[K]](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) extends DigestDao[K, T](client) {
+
   val keyConverter = _keyConverter
-  
+
   private def localKey(key: K): AerospikeKey[K] =
-    AerospikeKey(namespace,setName, keyConverter.toAsV(key), keyConverter)
-    
+    AerospikeKey(namespace, setName, keyConverter.toAsV(key), keyConverter)
+
   override val defaultCreateWritePolicy = {
     val wp = new WritePolicy
     wp.recordExistsAction = RecordExistsAction.CREATE_ONLY
@@ -161,21 +166,21 @@ abstract class OriginalKeyDao[K <: Any,T <: OriginalKeyModelObj[K]]
     wp.sendKey = true
     wp
   }
-  
+
   override def getCreationKey: (T) => AerospikeKey[K] = {
     (obj) => obj.getKey
   }
-  
+
   def read(key: K): Future[T] = {
     client.get(localKey(key), objBindings)(defaultReadPolicy).map(kr =>
       getObjFromKeyRecord(kr)
     )
   }
-  
+
   def update(key: K, obj: T): Future[AerospikeKey[K]] = {
     client.put(localKey(key), fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
   }
-  
+
   def delete(key: K): Future[AerospikeKey[K]] = {
     client.delete(localKey(key))(defaultDeleteWritePolicy).map(akb =>
       if (akb._2) akb._1
@@ -183,5 +188,5 @@ abstract class OriginalKeyDao[K <: Any,T <: OriginalKeyModelObj[K]]
     )
   }
 
-  override implicit val implicitMe: OriginalKeyDao[K,T] = this
+  override implicit val implicitMe: OriginalKeyDao[K, T] = this
 }

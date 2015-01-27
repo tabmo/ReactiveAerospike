@@ -16,15 +16,15 @@
 package eu.unicredit.reactive_aerospike.tests.model
 
 import eu.unicredit.reactive_aerospike.model._
-import eu.unicredit.reactive_aerospike.data.{AerospikeKey, AerospikeRecord, AerospikeBinProto}
+import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeRecord, AerospikeBinProto }
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 
-case class Person(id: String,
+case class Person(
+  id: String,
   name: String,
   surname: String,
-  age: Int)
-  (implicit dao: OriginalKeyDao[String, Person])
-  extends OriginalKeyModelObj[String](id, dao) with EqualPerson {
+  age: Int)(implicit dao: OriginalKeyDao[String, Person])
+    extends OriginalKeyModelObj[String](id, dao) with EqualPerson {
 
 }
 
@@ -36,13 +36,42 @@ case class PersonDao(client: AerospikeClient) extends OriginalKeyDao[String, Per
 
   val objWrite: Seq[AerospikeBinProto[Person, _]] =
     Seq(("name", (p: Person) => p.name),
-    	("surname", (p: Person) => p.surname),
-    	("age", (p: Person) => p.age))
+      ("surname", (p: Person) => p.surname),
+      ("age", (p: Person) => p.age))
 
   val objRead: (AerospikeKey[String], AerospikeRecord) => Person =
     (key: AerospikeKey[String], record: AerospikeRecord) =>
       Person(
         key.userKey.get,
+        record.get("name"),
+        record.get("surname"),
+        record.get("age"))
+}
+
+case class GenericPerson(
+  id: String,
+  name: String,
+  surname: String,
+  age: Int) extends EqualGenericPerson {}
+
+case class GenericPersonDao(client: AerospikeClient) extends Dao[String, GenericPerson](client) {
+
+  val namespace = "test"
+
+  val setName = "people"
+
+  def getKeyDigest(obj: GenericPerson): Array[Byte] =
+    AerospikeKey(namespace, setName, obj.id).digest
+
+  val objWrite: Seq[AerospikeBinProto[GenericPerson, _]] =
+    Seq(("name", (p: GenericPerson) => p.name),
+      ("surname", (p: GenericPerson) => p.surname),
+      ("age", (p: GenericPerson) => p.age))
+
+  val objRead: (AerospikeKey[String], AerospikeRecord) => GenericPerson =
+    (key: AerospikeKey[String], record: AerospikeRecord) =>
+      GenericPerson(
+        new String(key.digest),
         record.get("name"),
         record.get("surname"),
         record.get("age"))
