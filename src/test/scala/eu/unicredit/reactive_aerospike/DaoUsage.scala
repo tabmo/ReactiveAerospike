@@ -13,15 +13,22 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.tests
+package eu.unicredit.reactive_aerospike
 
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures._
 import java.util.UUID
+import eu.unicredit.reactive_aerospike.data._
 
-import eu.unicredit.reactive_aerospike.tests.model._
+import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+import eu.unicredit.reactive_aerospike.model._
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 
 class DaoUsage extends FlatSpec {
+
+  implicit def futureConverter[T](f: eu.unicredit.reactive_aerospike.future.Future[T]): org.scalatest.concurrent.ScalaFutures.FutureConcept[T] = {
+    fromSFToFuture(f)
+  }
 
   "An Aerospike Client" should "save and retrieve a person using Scala Futures " in {
     import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
@@ -46,22 +53,28 @@ class DaoUsage extends FlatSpec {
     Await.result(personDao.create(bob), 100 millis)
     Await.result(personDao.create(tim), 100 millis)
 
-    val res1 = Await.result(
-      personDao.read("rOBerT"),
-      100 millis)
+    // val res1 = Await.result(
+    //   personDao.read("rOBerT"),
+    //   100 millis)
 
-    val res2 = Await.result(
-      personDao.read("TImoTHy"),
-      100 millis)
+    // val res2 = Await.result(
+    //   personDao.read("TImoTHy"),
+    //   100 millis)
 
-    assert { bob == res1 }
-    assert { tim == res2 }
+    whenReady(personDao.read("TImoTHy")) { result =>
+      result == tim
+    }
+
+    whenReady(personDao.read("rOBerT")) { result =>
+      result == bob
+    }
+
   }
 
   it should "save and retrieve a person with Twitter Futures" in {
     import com.twitter.conversions.time._
     import com.twitter.util._
-    import eu.unicredit.reactive_aerospike.tests.TwitterFactory.Helpers._
+    import eu.unicredit.reactive_aerospike.TwitterFactory.Helpers._
 
     implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000, TwitterFactory))
 

@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.tests
+package eu.unicredit.reactive_aerospike
 
 import org.scalatest._
 

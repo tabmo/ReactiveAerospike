@@ -13,14 +13,14 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.tests.model
+package eu.unicredit.reactive_aerospike.model
 
 import eu.unicredit.reactive_aerospike.model._
 import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeRecord, AerospikeBinProto }
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 import eu.unicredit.reactive_aerospike.data.AerospikeValue
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-import eu.unicredit.reactive_aerospike.tests.crypt.AerospikeCryptValue._
+import eu.unicredit.reactive_aerospike.crypt.AerospikeCryptValue._
 
 case class Review(
   key: AerospikeKey[String],

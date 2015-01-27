@@ -40,11 +40,11 @@ class Listener[T <: CommandResult](factory: Factory) {
 
 class CommandResult(implicit factory: Factory) {}
 case class AerospikeWriteReturn[T <: Any](key: AerospikeKey[T])(implicit factory: Factory)
-    extends CommandResult()
+  extends CommandResult()
 case class AerospikeDeleteReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean])(implicit factory: Factory)
-    extends CommandResult
+  extends CommandResult
 case class AerospikeExistsReturn[T <: Any](key_existed: Tuple2[AerospikeKey[T], Boolean])(implicit factory: Factory)
-    extends CommandResult
+  extends CommandResult
 case class AerospikeReadReturn[T <: Any](
   key_record: Tuple2[AerospikeKey[_], AerospikeRecord])(implicit recordReader: AerospikeRecordReader,
     factory: Factory)

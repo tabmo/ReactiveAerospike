@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.tests.crypt
+package eu.unicredit.reactive_aerospike.crypt
 
 import eu.unicredit.reactive_aerospike.data._
 import javax.crypto.{ KeyGenerator, SecretKey, Cipher }

@@ -13,16 +13,16 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.tests
+package eu.unicredit.reactive_aerospike
 
 import org.scalatest._
 import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import eu.unicredit.reactive_aerospike.tests.model._
+import eu.unicredit.reactive_aerospike.model._
 import com.aerospike.client.AerospikeClient
-import eu.unicredit.reactive_aerospike.tests.crypt.AerospikeCryptValue.RSAKey
+import eu.unicredit.reactive_aerospike.crypt.AerospikeCryptValue.RSAKey
 
 class DataEncriptionUsage extends FlatSpec {
 
