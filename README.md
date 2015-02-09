@@ -9,16 +9,8 @@
 
 #### Installation Instructions
 
-Because the wrapper makes use of query on secondary indexes that are not implemented in the async client at the last (3.0.32) version of the driver you must:
-
-
-```bash
-git clone https://github.com/andreaTP/aerospike-client-java.git
-cd aerospike-client-java/
-./build_all
-```
-
-after that just clone and use Reactive Aerospike!
+This step is no more needed thanks to version 3.0.34 of the java driver.
+So, just clone and use Reactive Aerospike!
 
 #### Usage
 

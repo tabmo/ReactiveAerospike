@@ -142,21 +142,21 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     * homologous records
     */
   def getMulti[T](keys: Seq[AerospikeKey[T]],
-    recordReader: AerospikeRecordReader)(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    recordReader: AerospikeRecordReader)(implicit bpolicy: BatchPolicy = policy.asyncBatchPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
     checkConnection
     implicit val keyConverter = keys(0).converter
     val rl = AerospikeMultipleReadListener(recordReader)
-    super.get(rpolicy, rl, keys.map(_.inner).toArray)
+    super.get(bpolicy, rl, keys.map(_.inner).toArray)
     rl.result.map(x => x.key_records)
   }
 
   /*
     * NON homologous records
     */
-  def getMultiDifferent(keys_record_readers: Seq[(AerospikeKey[_], AerospikeRecordReader)])(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+  def getMultiDifferent(keys_record_readers: Seq[(AerospikeKey[_], AerospikeRecordReader)])(implicit bpolicy: BatchPolicy = policy.asyncBatchPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
     checkConnection
     val rl = AerospikeMultipleDifferentReadListener(keys_record_readers.map(x => (x._1.converter, x._2)))
-    super.get(rpolicy, rl, keys_record_readers.map(_._1.inner).toArray)
+    super.get(bpolicy, rl, keys_record_readers.map(_._1.inner).toArray)
     rl.result.map(x => x.key_records)
   }
 
@@ -165,11 +165,11 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     */
   def getMultiBins[T](keys: Seq[AerospikeKey[T]],
     binNames: Seq[String],
-    recordReader: AerospikeRecordReader)(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    recordReader: AerospikeRecordReader)(implicit bpolicy: BatchPolicy = policy.asyncBatchPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
     checkConnection
     implicit val keyConverter = keys(0).converter
     val rl = AerospikeMultipleReadListener(recordReader)
-    super.get(rpolicy, rl, keys.map(_.inner).toArray, binNames: _*)
+    super.get(bpolicy, rl, keys.map(_.inner).toArray, binNames: _*)
     rl.result.map(x => x.key_records)
   }
 
@@ -177,11 +177,11 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
    * homologous record headers
    */
   def getMultiHeader[T](keys: Seq[AerospikeKey[T]],
-    recordReader: AerospikeRecordReader)(implicit rpolicy: Policy = policy.readPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    recordReader: AerospikeRecordReader)(implicit bpolicy: BatchPolicy = policy.asyncBatchPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
     checkConnection
     implicit val keyConverter = keys(0).converter
     val rl = AerospikeMultipleReadListener(recordReader)
-    super.getHeader(rpolicy, rl, keys.map(_.inner).toArray)
+    super.getHeader(bpolicy, rl, keys.map(_.inner).toArray)
     rl.result.map(x => x.key_records)
   }
 
@@ -194,11 +194,11 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     if (key_stub.setName.isDefined)
       statement.setSetName(key_stub.setName.get)
 
-    statement.setFilters(Filter.equal(filter.name, filter.value.inner))
+    statement.setFilters(Filter.equal(filter.name, filter.value.inner.toString))
 
     implicit val keyConverter = key_stub.converter
     val sl = AerospikeSequenceReadListener[T](recordReader)
-    super.query(qpolicy, statement, sl)
+    super.query(qpolicy, sl, statement)
     sl.result.map(x => x.key_records)
   }
 
@@ -220,7 +220,7 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
 
     implicit val keyConverter = key_stub.converter
     val sl = AerospikeSequenceReadListener[T](recordReader)
-    super.query(qpolicy, statement, sl)
+    super.query(qpolicy, sl, statement)
     sl.result.map(x => x.key_records)
   }
 

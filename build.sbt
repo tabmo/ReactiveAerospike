@@ -1,12 +1,12 @@
 name := """reactive-aerospike"""
 
-version := "0.1.4-SNAPSHOT"
+version := "0.1.5"
 
 organization := "eu.unicredit"
 
 scalaVersion := "2.11.4"
 
-crossScalaVersions := Seq("2.9.2", "2.11.4")
+crossScalaVersions := Seq("2.9.2", "2.11.5")
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -17,7 +17,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-	  "com.aerospike" % "aerospike-client" % "3.0.33-SNAPSHOT",
+	  "com.aerospike" % "aerospike-client" % "3.0.34",
 	  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
 	  "com.twitter" %% "util-collection" % "6.23.0" % "test"
 )

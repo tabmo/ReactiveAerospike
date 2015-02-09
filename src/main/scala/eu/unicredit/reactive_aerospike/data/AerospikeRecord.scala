@@ -33,6 +33,7 @@ class AerospikeRecord(
   }
 
   def getOpt[X](binName: String): Option[AerospikeValue[X]] = {
+    type C = AerospikeValue[X]
     bins.find(bin =>
       bin.name == binName
     ).map(bin =>
