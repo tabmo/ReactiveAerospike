@@ -53,7 +53,7 @@ object TwitterFactory extends Factory {
     val inner = com.twitter.util.Promise.apply[T]()
     def future: Future[T] = new TwitterFuture(inner.interruptible)
     def success(value: T): Unit = inner.setValue(value)
-    def failure(exception: Throwable): Unit = inner.raise(exception)
+    def failure(exception: Throwable): Unit = inner.setException(exception)
   }
 
   def newPromise[T] = new TwitterPromise[T]
