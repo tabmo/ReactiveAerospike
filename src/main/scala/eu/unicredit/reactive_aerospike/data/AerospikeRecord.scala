@@ -55,7 +55,7 @@ class AerospikeRecord(
     )
 }
 
-case class AerospikeRecordReader(stub: Map[String, AerospikeValueConverter[_]]) {
+class AerospikeRecordReader(val stub: Map[String, AerospikeValueConverter[_]]) {
 
   def getStub = stub
 

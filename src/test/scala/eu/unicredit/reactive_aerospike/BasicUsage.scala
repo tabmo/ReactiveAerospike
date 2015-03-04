@@ -57,7 +57,7 @@ class BasicUsage extends FlatSpec {
     import scala.language.existentials
 
     //a record reader is required for reading
-    val recordReader = AerospikeRecordReader(
+    val recordReader = new AerospikeRecordReader(
       Map(("x" -> AerospikeDoubleConverter),
         ("y" -> AerospikeLongConverter),
         ("z" -> AerospikeStringConverter)))
@@ -97,7 +97,7 @@ class BasicUsage extends FlatSpec {
     implicit val listConverter = AerospikeListConverter()(AerospikeListConverter()(AerospikeIntConverter))
     implicit val mapConverter = AerospikeMapConverter()(AerospikeStringConverter, AerospikeIntConverter)
 
-    val recordReader = AerospikeRecordReader(
+    val recordReader = new AerospikeRecordReader(
       Map(("myListOfLists" -> listConverter), ("myMap" -> mapConverter)))
 
     val (theKey, theRecord) = Await.result(
