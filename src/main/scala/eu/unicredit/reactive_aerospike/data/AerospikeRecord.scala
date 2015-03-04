@@ -59,6 +59,13 @@ case class AerospikeRecordReader(stub: Map[String, AerospikeValueConverter[_]]) 
 
   def getStub = stub
 
+  def extractor: Record => AerospikeRecord = (record: Record) =>
+    new AerospikeRecord(stub.map(bin =>
+      AerospikeBin((bin._1, (record.bins.get(bin._1))), bin._2)).toSeq,
+      record.generation,
+      record.expiration
+    )
+
 }
 
 object AerospikeRecordReader {
@@ -70,12 +77,7 @@ object AerospikeRecordReader {
 
 object AerospikeRecord {
 
-  def apply(record: Record)(implicit stub: AerospikeRecordReader): AerospikeRecord = {
-    new AerospikeRecord(stub.getStub.map(bin =>
-      AerospikeBin((bin._1, (record.bins.get(bin._1))), bin._2)).toSeq,
-      record.generation,
-      record.expiration
-    )
-  }
+  def apply(record: Record)(implicit recordReader: AerospikeRecordReader): AerospikeRecord =
+    recordReader.extractor(record)
 
 }
