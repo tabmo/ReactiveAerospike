@@ -1,11 +1,9 @@
+# ReactiveAerospike
 
- 
- This is a pure Scala FUNCTIONAL and TYPE SAFE wrapper of the "aerospike java client".
- No more explicit cast and "asInstanceOf" in client code are needed!
- 
- It makes use of the async client and returns are wrapped into custom Future types wich can easily be mapped to your preferred Future implementation (bundled with Scala Standard Futures but if you prefer Twitter ones just copy and paste the code at the end of Future.scala file in your project and explicitly pass the Factory to the AerospikeClient).
- 
- Under the "model" package you can see a proposal for an handy "ORM-like" pattern.
+ ReactiveAerospike is a pure functional and type safe Scalawrapper for the [Aerospike Java Client Library
+](https://github.com/aerospike/aerospike-client-java).
+
+ It makes use of the `async` client and returns values are wrapped into custom Future types wich can easily be mapped to your preferred Future implementation (though we also bundle Scala Standard Futures and [Twitter Futures](https://github.com/twitter/util#futures))
 
 #### Installation Instructions
 
