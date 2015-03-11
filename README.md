@@ -3,19 +3,23 @@
  ReactiveAerospike is a pure functional and type safe Scalawrapper for the [Aerospike Java Client Library
 ](https://github.com/aerospike/aerospike-client-java).
 
- It makes use of the `async` client and returns values are wrapped into custom Future types wich can easily be mapped to your preferred Future implementation (though we also bundle Scala Standard Futures and [Twitter Futures](https://github.com/twitter/util#futures))
-
-#### Installation Instructions
-
-This step is no more needed thanks to version 3.0.34 of the java driver.
-So, just clone and use Reactive Aerospike!
+ It makes use of the `async` client and returns values are wrapped into custom Future types wich can easily be mapped to your preferred Future implementation (though we also bundle Scala standard Futures and [Twitter Futures](https://github.com/twitter/util#futures))
 
 #### Usage
 
-For usage examples, please refer to the tests in code.
+A client can be easily instantiated by proving host and port for your running server
 
-You can use directly the client and have to manage Bins and Records manually or make use of the "model" api to have ORM functionalities.
+```scala
+val client = new AerospikeClient("localhost", 3000)
+```
 
-#### API stability
+ReactiveAerospike provides two levels of usage: Direct and ORM-like.
 
-The API described above should be considered unstable.
+#### Direct
+
+Direct API lets you use basic `put`, `get`, `delete` commands to interact with Aerospike.
+You will need to
+
+Direct API expose
+
+#### ORM-like
