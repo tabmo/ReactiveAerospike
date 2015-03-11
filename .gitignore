@@ -9,3 +9,4 @@
 .idea
 .DS_Store
 **/.DS_Store
+scalastyle-config.xml

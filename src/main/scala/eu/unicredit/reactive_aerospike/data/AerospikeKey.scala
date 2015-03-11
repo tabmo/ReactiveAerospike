@@ -41,19 +41,16 @@ case class AerospikeKey[T <: Any](
     }
   )
 
-  override def equals(x: Any) = {
-    x match {
-      case ak: AerospikeKey[T] =>
-        this.inner == ak.inner
-      case _ => false
-    }
+  override def equals(k: Any): Boolean = k match {
+    case key: AerospikeKey[T] => this.inner == key.inner
+    case _ => false
   }
 
 }
 
 object AerospikeKey {
 
-  def computeDigest[T <: Any](setName: String, key: AerospikeValue[T]) =
+  def computeDigest[T <: Any](setName: String, key: AerospikeValue[T]): Array[Byte] =
     Key.computeDigest(setName, key.inner)
 
   def apply[T <: Any](namespace: String,
@@ -70,8 +67,12 @@ object AerospikeKey {
       key.namespace,
       key.digest,
       {
-        if (key.setName != null) Some(key.setName)
-        else None
+        if (key.setName != null) {
+          Some(key.setName)
+        }
+        else {
+          None
+        }
       },
       {
         try
@@ -100,16 +101,6 @@ object AerospikeKey {
       Some(setName), None
     )(converter)
 
-  /*
-  def apply[T <: Any](namespace: String,
-    digest: Array[Byte]): AerospikeKey[T] =
-    AerospikeKey(
-      namespace,
-      digest,
-      None,
-      None
-    )*/
-
   def apply[T <: Any](
     namespace: String,
     setName: String,
@@ -120,5 +111,4 @@ object AerospikeKey {
       computeDigest(setName,
         userKey),
       Some(setName), Some(userKey))(converter)
-
 }

@@ -57,3 +57,50 @@ client.get(key, recordReader)
 ```
 
 #### ORM-like
+The ORM-like (model) API provides you with an higher-level toolbox that you can use to persist your custom Scala classes/objects into Aerospike.
+
+Given your this example class:
+```scala
+case class Person(
+  id: String,
+  name: String,
+  surname: String,
+  age: Int)
+```
+
+you can define a `Dao` class that's going to handle persistence to and from Aerospike for you.
+A custom `Dao` class is that a class that extends ReactiveAerospike `Dao[K, T]` (with `K` being your key type and `T` being the type you want to persist) and providing it with an instance of a client. So something like:
+```scala
+case class PersonDAO(client: AerospikeClient)
+    extends Dao[String, Person](client)
+```
+You then need to set a `namespace` and `setName`:
+```scala
+val namespace = "test"
+val setName = "people"
+```
+Lastly, you need to define a `getKeyDigest` method that defines how your key digest is computed and two more values `objWrite` and `objRead`: these values collect useful functions that are going to be used when playing with your classes to and from Aerospike.
+In the end you should end with something like this:
+
+```scala
+case class PersonDAO(client: AerospikeClient) extends Dao[String, Person](client) {
+
+  val namespace = "test"
+  val setName = "people"
+
+  def getKeyDigest(obj: Person)= AerospikeKey(namespace, setName, obj.id).digest
+
+  val objWrite = Seq(
+      ("name", (p: Person) => p.name),
+      ("surname", (p: Person) => p.surname),
+      ("age", (p: Person) => p.age))
+
+  val objRead: (AerospikeKey[String], AerospikeRecord) => Person =
+    (key: AerospikeKey[String], record: AerospikeRecord) =>
+      Person(
+        new String(key.digest),
+        record.get("name"),
+        record.get("surname"),
+        record.get("age"))
+}
+```

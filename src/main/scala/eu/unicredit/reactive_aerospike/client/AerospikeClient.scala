@@ -12,7 +12,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 package eu.unicredit.reactive_aerospike.client
 
 import com.aerospike.client.async.{ AsyncClient, AsyncClientPolicy }
@@ -98,9 +97,10 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     super.exists(wpolicy, el, key.inner)
     el.result.map(_.key_existed)
   }
+
   /*
-	 * Fixed type to long
-	 */
+   * Fixed type to long
+   */
   def add[K](key: AerospikeKey[K],
     bins: Seq[AerospikeBin[Long]])(implicit wpolicy: WritePolicy = policy.writePolicyDefault): Future[AerospikeKey[K]] = {
     checkConnection
@@ -191,8 +191,9 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     checkConnection
     val statement = new Statement()
     statement.setNamespace(key_stub.namespace)
-    if (key_stub.setName.isDefined)
+    if (key_stub.setName.isDefined) {
       statement.setSetName(key_stub.setName.get)
+    }
 
     statement.setFilters(Filter.equal(filter.name, filter.value.inner.toString))
 
@@ -210,8 +211,9 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     checkConnection
     val statement = new Statement()
     statement.setNamespace(key_stub.namespace)
-    if (key_stub.setName.isDefined)
+    if (key_stub.setName.isDefined) {
       statement.setSetName(key_stub.setName.get)
+    }
 
     statement.setFilters(
       Filter.range(filterBinName,
@@ -223,5 +225,4 @@ class AerospikeClient(hosts: Host*)(implicit policy: AsyncClientPolicy = new Asy
     super.query(qpolicy, sl, statement)
     sl.result.map(x => x.key_records)
   }
-
 }

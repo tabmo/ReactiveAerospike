@@ -20,33 +20,27 @@ import com.aerospike.client.Value._
 import com.aerospike.client.util.Packer
 import com.aerospike.client.lua.LuaInstance
 import com.aerospike.client.command.ParticleType
+
 import scala.collection.JavaConverters._
 
 trait AerospikeValue[+T <: Any] extends Value {
   val inner: Value
   val base: T
 
-  override def estimateSize() =
-    inner.estimateSize()
+  override def estimateSize(): Int = inner.estimateSize()
 
-  override def write(buffer: Array[Byte], offset: Int) =
-    inner.write(buffer, offset)
+  override def write(buffer: Array[Byte], offset: Int): Int = inner.write(buffer, offset)
 
-  override def pack(packer: Packer) =
-    inner.pack(packer)
+  override def pack(packer: Packer): Unit = inner.pack(packer)
 
-  override def getType() =
-    inner.getType
+  override def getType(): Int = inner.getType
 
-  override def getObject() =
-    inner.getObject
+  override def getObject(): Object = inner.getObject
 
   //To be updated
-  override def getLuaValue(instance: LuaInstance) =
-    inner.getLuaValue(instance)
+  override def getLuaValue(instance: LuaInstance): LuaValue = inner.getLuaValue(instance)
 
-  override def toString() =
-    inner.toString()
+  override def toString(): String = inner.toString()
 }
 
 object AerospikeValue {
@@ -62,8 +56,7 @@ object AerospikeValue {
     def fromValue(x: Value): AerospikeValue[T]
   }
 
-  case class AerospikeNull()
-      extends AerospikeValue[Null] {
+  case class AerospikeNull() extends AerospikeValue[Null] {
     override val inner = new NullValue
     override val base = null
   }
@@ -108,8 +101,7 @@ object AerospikeValue {
       extends AerospikeValue[Double] {
     override val inner = new LongValue(java.lang.Double.doubleToLongBits(d))
     override val base = d
-    override def toString() =
-      d.toString
+    override def toString(): String = d.toString
   }
 
   implicit object AerospikeDoubleConverter extends AerospikeValueConverter[Double] {
@@ -163,7 +155,8 @@ object AerospikeValue {
       AerospikeList(values.toList)
   }
 
-  implicit def listConverter[T <: Any](implicit converter: AerospikeValueConverter[T]) = {
+  implicit def listConverter[T <: Any]
+    (implicit converter: AerospikeValueConverter[T]): AerospikeListConverter[T] = {
     AerospikeListConverter[T]()
   }
 
@@ -203,8 +196,9 @@ object AerospikeValue {
       AerospikeMap(values.map(x => converter1.toAsV(x._1) -> converter2.toAsV(x._2)).toMap)
   }
 
-  implicit def mapConverter[T1 <: Any, T2 <: Any](implicit converter1: AerospikeValueConverter[T1],
-    converter2: AerospikeValueConverter[T2]) = {
+  implicit def mapConverter[T1 <: Any, T2 <: Any]
+    (implicit converter1: AerospikeValueConverter[T1],
+      converter2: AerospikeValueConverter[T2]):AerospikeMapConverter[T1, T2] = {
     AerospikeMapConverter[T1, T2]()
   }
 
@@ -254,5 +248,4 @@ object AerospikeValue {
   def apply[T <: Any](x: Value)(implicit conv: AerospikeValueConverter[T]): AerospikeValue[T] = {
     conv.fromValue(x)
   }
-
 }
