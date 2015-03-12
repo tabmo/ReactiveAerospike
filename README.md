@@ -27,10 +27,10 @@ import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 A client can be easily instantiated by proving host and port for your running server
 
 ```scala
-val client = new AerospikeClient("localhost", 3000)
+val client = new AerospikeClient("192.168.59.103", 3000)
 ```
 
-ReactiveAerospike provides two levels of usage: Direct and ORM-like.
+ReactiveAerospike provides two levels of usage: [Direct]() and [ORM-like]().
 
 #### Direct
 
@@ -40,12 +40,16 @@ You will always need to provide your `key` for any operation.
 An `AerospikeKey` usually requires a `namespace`, the name of the `set` and its `value`.
 
 ```scala
-val key = AerospikeKey("my-namespace", "my-set",  42)
+val key = AerospikeKey("test", "my-set",  42)
+//key: AerospikeKey[Int] = AerospikeKey(test,[B@68eea180,Some(my-set),Some(42))
 ```
 
-Implicit conversions are used to support transformations from your types to Aerospike values.
+**IMPORTANT note about Aerospike Keys**: Internally Aerospikes only cares about its [keys](https://github.com/aerospike/aerospike-client-java/blob/master/client/src/com/aerospike/client/Key.java) digests. By deafult the key value provided by the user is discarded. You're going to have to specifically define a `WritePolicy` with `sendKey = true` if you want Aerospike to store your key. 
+You can go on using the key you have defined and pass it through your functions, but the original value would not be available, should you need it.
 
-Given some `bins`:
+Also note that implicit conversions are used to support transformations from your types to Aerospike values.
+
+If we now define some `bins`:
 
 ```scala
 val bin1 = AerospikeBin("x", 1) //an Aerospike bin named x containing 1
@@ -53,16 +57,14 @@ val bin2 = AerospikeBin("y", 2)
 val bin3 = AerospikeBin("z", 3)
 ```
 
-we can define operations to persist them.
-
-note: **ALL OPERATIONS ARE ASYNCHRONOUS**
+we can then go on and persist them.
 
 ####### put
 A `put` operation for a given `key` and a list of `bins` looks like this:
 ```scala
 client.put(key, Seq(bin1, bin2, bin3))
 ```
-Put operations always return your key wrapped in a future.
+Put operations always return a key wrapped in a future.
 In this specific case you would get a `Future[AerospikeKey[Int]]`.
 
 ####### get
@@ -82,6 +84,20 @@ Now you can `get`:
 
 ```scala
 client.get(key, recordReader)
+```
+
+In this case you would get a `Future[(AerospikeKey[_], AerospikeRecord)]`.
+An instance of `AerospikeRecord` will then contain your bins.
+
+```scala
+val (k, r) = Await.result(client.get(key, recordReader), 5 millis)
+//k: AerospikeKey[_] = AerospikeKey(test,[B@4d37d02c,Some(my-set),Some(0))
+//r: AerospikeRecord = AerospikeRecord@5a04cc60 
+//TODO: missing toString for AerospikeRecord
+```
+```scala
+r.getBins
+//res0: Seq[AerospikeBin[_]] = List(AerospikeBin(x,1,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(y,2,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(z,3,AerospikeValue$AerospikeIntConverter$@58dd0316))
 ```
 
 #### ORM-like
@@ -132,3 +148,5 @@ case class PersonDAO(client: AerospikeClient) extends Dao[String, Person](client
         record.get("age"))
 }
 ```
+
+
