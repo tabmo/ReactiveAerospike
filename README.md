@@ -6,6 +6,23 @@
  It makes use of the `async` client and return values are wrapped into Futures that can easily be mapped to your preferred Future implementation (though we also bundle standard Scala Futures as well as [Twitter Futures](https://github.com/twitter/util#futures))
 
 #### Usage
+Usually you just need these imports:
+
+```scala
+import eu.unicredit.reactive_aerospike.client._
+
+//for direct API
+import eu.unicredit.reactive_aerospike.data._
+
+//for ORM-like API
+import eu.unicredit.reactive_aerospike.model._
+
+//for built-in readers and converters
+import eu.unicredit.reactive_aerospike.data.AerospikeValue._
+
+//for conversion helpers to Scala Futures
+import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
+```
 
 A client can be easily instantiated by proving host and port for your running server
 
@@ -28,28 +45,39 @@ val key = AerospikeKey("my-namespace", "my-set",  42)
 
 Implicit conversions are used to support transformations from your types to Aerospike values.
 
+Given some `bins`:
+
+```scala
+val bin1 = AerospikeBin("x", 1) //an Aerospike bin named x containing 1
+val bin2 = AerospikeBin("y", 2)
+val bin3 = AerospikeBin("z", 3)
+```
+
+we can define operations to persist them.
+
+note: **ALL OPERATIONS ARE ASYNCHRONOUS**
+
 ####### put
 A `put` operation for a given `key` and a list of `bins` looks like this:
 ```scala
 client.put(key, Seq(bin1, bin2, bin3))
 ```
+Put operations always return your key wrapped in a future.
+In this specific case you would get a `Future[AerospikeKey[Int]]`.
+
 ####### get
 A `get` operation for a given `key` requires you to specify a so-called `RecordReader`, a map that contains a way to convert values contained in your bins. So given:
-```scala
-    val bin1 = AerospikeBin("x", 1)
-    val bin2 = AerospikeBin("y", 2)
-    val bin3 = AerospikeBin("z", 3)
-```
+
 You will need to specify a `AerospikeRecordReader` like this:
 
 ```scala
-    val recordReader = new AerospikeRecordReader(
+val recordReader = new AerospikeRecordReader(
     Map(("x" -> AerospikeIntConverter),
         ("y" -> AerospikeIntConverter),
         ("z" -> AerospikeIntConverter)))
 ```
 
-A series of built-int implicit converters are defined in `AerospikeValue`.
+A series of built-int implicit converters are defined in `AerospikeValue`. 
 Now you can `get`:
 
 ```scala
@@ -65,13 +93,13 @@ case class Person(
   id: String,
   name: String,
   surname: String,
-  age: Int)
+  age: Int) 
 ```
 
 you can define a `Dao` class that's going to handle persistence to and from Aerospike for you.
 A custom `Dao` class is that a class that extends ReactiveAerospike `Dao[K, T]` (with `K` being your key type and `T` being the type you want to persist) and providing it with an instance of a client. So something like:
 ```scala
-case class PersonDAO(client: AerospikeClient)
+case class PersonDAO(client: AerospikeClient) 
     extends Dao[String, Person](client)
 ```
 You then need to set a `namespace` and `setName`:
