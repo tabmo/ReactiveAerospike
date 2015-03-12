@@ -69,8 +69,7 @@ object AerospikeKey {
       {
         if (key.setName != null) {
           Some(key.setName)
-        }
-        else {
+        } else {
           None
         }
       },

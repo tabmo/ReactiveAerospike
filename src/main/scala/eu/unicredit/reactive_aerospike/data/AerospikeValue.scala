@@ -15,6 +15,7 @@
 
 package eu.unicredit.reactive_aerospike.data
 
+import org.luaj.vm2.LuaValue
 import com.aerospike.client.Value
 import com.aerospike.client.Value._
 import com.aerospike.client.util.Packer
@@ -155,8 +156,7 @@ object AerospikeValue {
       AerospikeList(values.toList)
   }
 
-  implicit def listConverter[T <: Any]
-    (implicit converter: AerospikeValueConverter[T]): AerospikeListConverter[T] = {
+  implicit def listConverter[T <: Any](implicit converter: AerospikeValueConverter[T]): AerospikeListConverter[T] = {
     AerospikeListConverter[T]()
   }
 
@@ -196,9 +196,8 @@ object AerospikeValue {
       AerospikeMap(values.map(x => converter1.toAsV(x._1) -> converter2.toAsV(x._2)).toMap)
   }
 
-  implicit def mapConverter[T1 <: Any, T2 <: Any]
-    (implicit converter1: AerospikeValueConverter[T1],
-      converter2: AerospikeValueConverter[T2]):AerospikeMapConverter[T1, T2] = {
+  implicit def mapConverter[T1 <: Any, T2 <: Any](implicit converter1: AerospikeValueConverter[T1],
+    converter2: AerospikeValueConverter[T2]): AerospikeMapConverter[T1, T2] = {
     AerospikeMapConverter[T1, T2]()
   }
 
