@@ -16,27 +16,22 @@
 package eu.unicredit.reactive_aerospike
 
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures._
 import java.util.UUID
 import eu.unicredit.reactive_aerospike.data._
-
-import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 import eu.unicredit.reactive_aerospike.model._
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
+import eu.unicredit.reactive_aerospike.future.ScalaFactory
 
 class DaoUsage extends FlatSpec {
 
-  implicit def futureConverter[T](f: eu.unicredit.reactive_aerospike.future.Future[T]): org.scalatest.concurrent.ScalaFutures.FutureConcept[T] = {
-    fromSFToFuture(f)
-  }
-
   "An Aerospike Client" should "save and retrieve a person using Scala Futures " in {
-    import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
     import scala.concurrent.Await
     import scala.concurrent.duration._
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000))
+    implicit val client = new AerospikeClient("localhost", 3000)(ScalaFactory)
+
+    implicit val personDao = PersonDao()
 
     val bob = Person("rOBerT", "Bob", "Wood", 23)
     val tim = Person("TImoTHy", "Tim", "Forest", 32)
@@ -61,22 +56,19 @@ class DaoUsage extends FlatSpec {
     //   personDao.read("TImoTHy"),
     //   100 millis)
 
-    whenReady(personDao.read("TImoTHy")) { result =>
-      result == tim
-    }
+    Await.result(personDao.read("TImoTHy"), 100 millis) == tim
 
-    whenReady(personDao.read("rOBerT")) { result =>
-      result == bob
-    }
+    Await.result(personDao.read("rOBerT"), 100 millis) == bob
 
   }
 
   it should "save and retrieve a person with Twitter Futures" in {
     import com.twitter.conversions.time._
     import com.twitter.util._
-    import eu.unicredit.reactive_aerospike.TwitterFactory.Helpers._
 
-    implicit val personDao = PersonDao(new AerospikeClient("localhost", 3000, TwitterFactory))
+    implicit val client = new AerospikeClient("localhost", 3000)(TwitterFactory)
+
+    implicit val personDao = PersonDao()
 
     val john = Person("joHn", "John", "Doe", 23)
     val carl = Person("cARL", "Carl", "Green", 32)
@@ -100,14 +92,15 @@ class DaoUsage extends FlatSpec {
   }
 
   it should "save and retrieve generic case classes" in {
-    import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
     import scala.concurrent.Await
     import scala.concurrent.duration._
     import scala.concurrent.ExecutionContext.Implicits.global
 
     import eu.unicredit.reactive_aerospike.data.AerospikeKey
 
-    implicit val personDao = GenericPersonDao(new AerospikeClient("localhost", 3000))
+    implicit val client = new AerospikeClient("localhost", 3000)(ScalaFactory)
+
+    implicit val personDao = GenericPersonDao()
 
     val john = GenericPerson("joHn", "Tizio", "tizio", 23)
     val carl = GenericPerson("cARL", "Caio", "caio", 32)

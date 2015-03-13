@@ -44,8 +44,8 @@ case class Review(
 
 }
 
-abstract class ReviewDao(client: AerospikeClient)
-    extends DigestDao[String, Review](client) {
+abstract class ReviewDao
+    extends DigestDao[String, Review] {
   val namespace = "test"
 
   val setName = "reviews"
@@ -76,21 +76,18 @@ abstract class ReviewDao(client: AerospikeClient)
         record.get("opinion"))
 }
 
-case class ReviewerReviewDao(publicKey: RSAPublicKey,
-  client: AerospikeClient = new AerospikeClient("localhost", 3000))
-    extends ReviewDao(client) {
+case class ReviewerReviewDao(publicKey: RSAPublicKey)
+    extends ReviewDao {
   def sc = AerospikeRSAStringConverter(publicKey)
 }
 
-case class AuthorReviewDao(privateKey: RSAPrivateKey,
-  client: AerospikeClient = new AerospikeClient("localhost", 3000))
-    extends ReviewDao(client) {
+case class AuthorReviewDao(privateKey: RSAPrivateKey)
+    extends ReviewDao {
   def sc = AerospikeRSAStringConverter(privateKey)
 }
 
 case class AuthorBossReviewDao(privateKey: RSAPrivateKey,
-  publicKey: RSAPublicKey,
-  client: AerospikeClient = new AerospikeClient("localhost", 3000))
-    extends ReviewDao(client) {
+  publicKey: RSAPublicKey)
+    extends ReviewDao {
   def sc = AerospikeRSAStringConverter(privateKey, publicKey)
 }

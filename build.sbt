@@ -4,7 +4,7 @@ version := "0.1.6"
 
 organization := "eu.unicredit"
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
 crossScalaVersions := Seq("2.9.2", "2.11.5")
 
@@ -13,7 +13,9 @@ scalacOptions ++= Seq(
   "-feature",
   "-language:postfixOps",
   "-language:implicitConversions",
-  "-language:reflectiveCalls"
+  "-language:reflectiveCalls",
+  "-language:existentials",
+  "-language:higherKinds"
 )
 
 libraryDependencies ++= Seq(

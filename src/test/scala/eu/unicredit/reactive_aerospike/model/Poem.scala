@@ -20,6 +20,7 @@ import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeRecord, Aer
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
 import eu.unicredit.reactive_aerospike.data.AerospikeValue
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
+import eu.unicredit.reactive_aerospike.future.{ Future, ScalaFactory }
 
 import eu.unicredit.reactive_aerospike.crypt.AerospikeCryptValue._
 
@@ -41,8 +42,8 @@ case class Poem(
 
 }
 
-case class PoemDao(passwordString: Option[String], client: AerospikeClient = new AerospikeClient("localhost", 3000))
-    extends DigestDao[String, Poem](client) {
+case class PoemDao(passwordString: Option[String])
+    extends DigestDao[String, Poem] {
 
   val namespace = "test"
   val setName = "poems"

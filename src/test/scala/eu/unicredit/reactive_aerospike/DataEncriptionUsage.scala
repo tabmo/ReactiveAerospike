@@ -16,12 +16,11 @@
 package eu.unicredit.reactive_aerospike
 
 import org.scalatest._
-import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import eu.unicredit.reactive_aerospike.model._
-import com.aerospike.client.AerospikeClient
+import eu.unicredit.reactive_aerospike.client.AerospikeClient
 import eu.unicredit.reactive_aerospike.crypt.AerospikeCryptValue.RSAKey
 
 class DataEncriptionUsage extends FlatSpec {
@@ -34,6 +33,8 @@ class DataEncriptionUsage extends FlatSpec {
   val poemTitle = "Amazingly innovative!"
 
   val myName = "Andrea"
+
+  implicit val client = AerospikeClient("localhost", 3000)
 
   "I " should "work on my next poem and save it on 'unsafe' database " in {
 
@@ -75,7 +76,7 @@ class DataEncriptionUsage extends FlatSpec {
   "Other users " should " be not able to read my work!" in {
     implicit val poemDao = PoemDao(None)
 
-    createSecondaryIndex(poemDao.client)
+    createSecondaryIndex
 
     val andreaPoems = Await.result(poemDao.findOn("author", "Andrea"), 100 millis)
 
@@ -114,8 +115,9 @@ class DataEncriptionUsage extends FlatSpec {
 
     Await.result(reviewDao.create(poemReview), 100 millis)
 
+    val doRead = () => Await.result(reviewDao.read(poemReview.key), 100 millis)
     intercept[Exception] {
-      Await.result(reviewDao.read(poemReview.key), 100 millis)
+      doRead()
     }
 
   }
@@ -136,8 +138,9 @@ class DataEncriptionUsage extends FlatSpec {
         "FUNTASTIC!"
       )
 
+    val doUpdate = () => Await.result(authorDao.update(modifiedReview.key, modifiedReview), 100 millis)
     intercept[Exception] {
-      Await.result(authorDao.update(modifiedReview.key, modifiedReview), 100 millis)
+      doUpdate()
     }
   }
 
@@ -171,13 +174,14 @@ class DataEncriptionUsage extends FlatSpec {
     val maliciousKey = RSAKey()
     implicit val maliciousDao = AuthorBossReviewDao(maliciousKey.privateK, maliciousKey.publicK)
 
+    val doRead = () => Await.result(maliciousDao.read(maliciousDao.key(reviewId)), 100 millis)
     intercept[Exception] {
-      Await.result(maliciousDao.read(maliciousDao.key(reviewId)), 100 millis)
+      doRead()
     }
 
   }
 
-  def createSecondaryIndex(client: AerospikeClient) = {
+  def createSecondaryIndex[F[_]](implicit client: AerospikeClient[F]) = {
     try {
       import com.aerospike.client.policy.Policy
       import com.aerospike.client.query.IndexType

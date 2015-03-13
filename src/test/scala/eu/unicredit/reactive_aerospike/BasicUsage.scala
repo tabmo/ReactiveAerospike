@@ -20,7 +20,6 @@ import org.scalatest._
 import eu.unicredit.reactive_aerospike.client._
 import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 
 import scala.util.{ Success, Failure }
 import scala.concurrent._
@@ -29,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BasicUsage extends FlatSpec {
 
-  val client = new AerospikeClient("localhost", 3000)
+  val client = AerospikeClient("localhost", 3000)
 
   val key = AerospikeKey("test", "demokey", "123")
 
@@ -38,13 +37,12 @@ class BasicUsage extends FlatSpec {
   val z = "tre"
 
   "An Aerospike client" should "save sequences of bins under a given key" in {
-    import eu.unicredit.reactive_aerospike.future.{ Future => ReactiveAerospikeFuture }
 
     val bin1 = AerospikeBin("x", x)
     val bin2 = AerospikeBin("y", y)
     val bin3 = AerospikeBin("z", z)
 
-    val aKey: ReactiveAerospikeFuture[AerospikeKey[String]] =
+    val aKey: Future[AerospikeKey[String]] =
       client.put(key, Seq(bin1, bin2, bin3))
 
     val result = Await.result(aKey, 100 millis)
@@ -53,9 +51,6 @@ class BasicUsage extends FlatSpec {
   }
 
   it should "retrieve the record" in {
-    import eu.unicredit.reactive_aerospike.future.{ Future => ReactiveAerospikeFuture }
-    import scala.language.existentials
-
     //a record reader is required for reading
     val recordReader = new AerospikeRecordReader(
       Map(("x" -> AerospikeDoubleConverter),

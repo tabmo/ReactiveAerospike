@@ -15,8 +15,6 @@
 
 package eu.unicredit.reactive_aerospike.future
 
-import scala.language.higherKinds
-
 trait Future[+T] {
   def map[S](f: T => S): Future[S]
   def flatMap[S](f: T => Future[S]): Future[S]
@@ -28,19 +26,28 @@ trait Promise[T <: Any] {
   def failure(exception: Throwable): Unit
 }
 
-trait Factory {
+trait Factory[RFT[_]] {
   def newPromise[T]: Promise[T]
+
+  def toBase[T]: (Future[T] => RFT[T])
 }
 
 /* plain Scala default implementation */
-object ScalaFactory extends Factory {
+object ScalaFactory extends Factory[scala.concurrent.Future] {
   import scala.util.{ Success, Failure }
+
+  def toBase[T] = (f: Future[T]) => {
+    f match {
+      case sf: ScalaFuture[T] =>
+        sf.inner
+      case _ => throw new Exception("Wrong future type")
+    }
+  }
+
   class ScalaFuture[+T](f: scala.concurrent.Future[T])
       extends Future[T] {
     val inner = f
-
     //please complete this before usage if needed
-
     lazy val executionContextPromise = scala.concurrent.Promise[scala.concurrent.ExecutionContext]
     lazy val defaultExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
     private lazy implicit val executionContext =
@@ -93,16 +100,4 @@ object ScalaFactory extends Factory {
 
   def newPromise[T] = new ScalaPromise[T]
 
-  object Helpers {
-
-    implicit def fromSFToFuture[T](x: Future[T]): scala.concurrent.Future[T] =
-      x match {
-        case sf: ScalaFuture[T] =>
-          sf.inner
-        case _ => throw new Exception("Wrong future type")
-      }
-    implicit def fromFutureToSF[T](x: scala.concurrent.Future[T]): ScalaFuture[T] =
-      new ScalaFuture(x)
-
-  }
 }

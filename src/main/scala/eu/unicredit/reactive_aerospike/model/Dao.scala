@@ -21,7 +21,7 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 import eu.unicredit.reactive_aerospike.future.{ Future, Promise }
 import com.aerospike.client.policy._
 
-abstract class Dao[K <: Any, T <: Any](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) {
+abstract class Dao[K <: Any, T <: Any](implicit _keyConverter: AerospikeValueConverter[K]) {
 
   val namespace: String
 
@@ -91,67 +91,75 @@ abstract class Dao[K <: Any, T <: Any](client: AerospikeClient)(implicit _keyCon
   def getCreationKey: (T) => AerospikeKey[K] =
     (obj) => AerospikeKey[K](namespace, setName, getKeyDigest(obj))
 
-  def create(obj: T): Future[AerospikeKey[K]] = {
-    client.put(
-      getCreationKey(obj),
-      fromObjToBinSeq(obj))(defaultCreateWritePolicy)
-  }
-
-  def read(key: AerospikeKey[K]): Future[T] = {
-    client.get(key, objBindings)(defaultReadPolicy).map(kr =>
-      getObjFromKeyRecord(kr)
+  def create[F[_]](obj: T)(implicit client: AerospikeClient[F]) = {
+    client.getFactory.toBase(
+      client.inner_put(
+        getCreationKey(obj),
+        fromObjToBinSeq(obj))(defaultCreateWritePolicy)
     )
   }
 
-  def update(key: AerospikeKey[K], obj: T): Future[AerospikeKey[K]] = {
-    client.put(key, fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
+  def read[F[_]](key: AerospikeKey[K])(implicit client: AerospikeClient[F]) = {
+    client.getFactory.toBase(
+      client.inner_get(key, objBindings)(defaultReadPolicy).map(kr =>
+        getObjFromKeyRecord(kr)
+      ))
   }
 
-  def delete(key: AerospikeKey[K]): Future[AerospikeKey[K]] = {
-    client.delete(key)(defaultDeleteWritePolicy).map(akb =>
-      if (akb._2) akb._1
-      else throw new Exception(s"Object with key $key does not exists")
+  def update[F[_]](key: AerospikeKey[K], obj: T)(implicit client: AerospikeClient[F]) = {
+    client.getFactory.toBase(
+      client.inner_put(key, fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
     )
   }
 
-  def findOn(field: String, value: String): Future[Seq[T]] =
+  def delete[F[_]](key: AerospikeKey[K])(implicit client: AerospikeClient[F]) = {
+    client.getFactory.toBase(
+      client.inner_delete(key)(defaultDeleteWritePolicy).map(akb =>
+        if (akb._2) akb._1
+        else throw new Exception(s"Object with key $key does not exists")
+      ))
+  }
+
+  def findOn[F[_]](field: String, value: String)(implicit client: AerospikeClient[F]): F[Seq[T]] =
     findOn(AerospikeBin(field, value))
-  def findOn(field: String, value: Long): Future[Seq[T]] =
+  def findOn[F[_]](field: String, value: Long)(implicit client: AerospikeClient[F]): F[Seq[T]] =
     findOn(AerospikeBin(field, value))
-  private def findOn(bin: AerospikeBin[_]): Future[Seq[T]] =
+  private def findOn[F[_]](bin: AerospikeBin[_])(implicit client: AerospikeClient[F]): F[Seq[T]] =
     objBindings.getStub.find(b => b._1 == bin.name) match {
       case None =>
         throw new Exception("Cannot find selected field")
       case Some(proto) =>
-        client.queryEqual(AerospikeKey(namespace, setName, ""), objBindings, bin).map(krs =>
-          krs.map(kr =>
-            getObjFromKeyRecord(kr)
-          )
-        )
+        client.getFactory.toBase(
+          client.inner_queryEqual(AerospikeKey(namespace, setName, ""), objBindings, bin).map(krs =>
+            krs.map(kr =>
+              getObjFromKeyRecord(kr)
+            )
+          ))
     }
 
-  def findWithin(field: String, minValue: Long, maxValue: Long): Future[Seq[T]] =
+  def findWithin[F[T]](field: String, minValue: Long, maxValue: Long)(implicit client: AerospikeClient[F]) = //: F[Seq[T]] =
     objBindings.getStub.find(b => b._1 == field) match {
       case None => throw new Exception("Cannot find selected field")
       case Some(proto) =>
-        client.queryRange(AerospikeKey(namespace, setName, ""), objBindings, field, minValue, maxValue).map(krs =>
-          krs.map(kr =>
-            getObjFromKeyRecord(kr)
-          )
-        )
+        client.getFactory.toBase(
+          client.inner_queryRange(AerospikeKey(namespace, setName, ""), objBindings, field, minValue, maxValue).map(krs =>
+            krs.map(kr =>
+              getObjFromKeyRecord(kr)
+            )
+          ))
     }
 
   implicit val implicitMe: Dao[K, T] = this
 }
 
-abstract class DigestDao[K <: Any, T <: ModelObj[K]](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) extends Dao[K, T](client) {
+abstract class DigestDao[K <: Any, T <: ModelObj[K]](implicit _keyConverter: AerospikeValueConverter[K]) extends Dao[K, T] {
 
   override def getKeyDigest(obj: T): Array[Byte] =
     obj.getDigest
 
 }
 
-abstract class OriginalKeyDao[K <: Any, T <: OriginalKeyModelObj[K]](client: AerospikeClient)(implicit _keyConverter: AerospikeValueConverter[K]) extends DigestDao[K, T](client) {
+abstract class OriginalKeyDao[K <: Any, T <: OriginalKeyModelObj[K]](implicit _keyConverter: AerospikeValueConverter[K]) extends DigestDao[K, T] {
 
   val keyConverter = _keyConverter
 
@@ -171,21 +179,25 @@ abstract class OriginalKeyDao[K <: Any, T <: OriginalKeyModelObj[K]](client: Aer
     (obj) => obj.getKey
   }
 
-  def read(key: K): Future[T] = {
-    client.get(localKey(key), objBindings)(defaultReadPolicy).map(kr =>
-      getObjFromKeyRecord(kr)
+  def read[F[_]](key: K)(implicit client: AerospikeClient[F]): F[T] = {
+    client.getFactory.toBase(
+      client.inner_get(localKey(key), objBindings)(defaultReadPolicy).map(kr =>
+        getObjFromKeyRecord(kr)
+      ))
+  }
+
+  def update[F[_]](key: K, obj: T)(implicit client: AerospikeClient[F]) = { //: F[AerospikeKey[K]] = {
+    client.getFactory.toBase(
+      client.inner_put(localKey(key), fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
     )
   }
 
-  def update(key: K, obj: T): Future[AerospikeKey[K]] = {
-    client.put(localKey(key), fromObjToBinSeq(obj))(defaultUpdateWritePolicy)
-  }
-
-  def delete(key: K): Future[AerospikeKey[K]] = {
-    client.delete(localKey(key))(defaultDeleteWritePolicy).map(akb =>
-      if (akb._2) akb._1
-      else throw new Exception(s"Object with key $key does not exists")
-    )
+  def delete[F[_]](key: K)(implicit client: AerospikeClient[F]) = { //: F[AerospikeKey[K]] = {
+    client.getFactory.toBase(
+      client.inner_delete(localKey(key))(defaultDeleteWritePolicy).map(akb =>
+        if (akb._2) akb._1
+        else throw new Exception(s"Object with key $key does not exists")
+      ))
   }
 
   override implicit val implicitMe: OriginalKeyDao[K, T] = this

@@ -18,6 +18,7 @@ package eu.unicredit.reactive_aerospike.model
 import eu.unicredit.reactive_aerospike.model._
 import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeRecord, AerospikeBinProto }
 import eu.unicredit.reactive_aerospike.client.AerospikeClient
+import eu.unicredit.reactive_aerospike.future.Future
 
 case class Person(
   id: String,
@@ -27,7 +28,7 @@ case class Person(
     extends OriginalKeyModelObj[String](id, dao) with EqualPerson {
 }
 
-case class PersonDao(client: AerospikeClient) extends OriginalKeyDao[String, Person](client) {
+case class PersonDao() extends OriginalKeyDao[String, Person] {
 
   val namespace = "test"
 
@@ -54,7 +55,7 @@ case class GenericPerson(
   surname: String,
   age: Int) extends EqualGenericPerson {}
 
-case class GenericPersonDao(client: AerospikeClient) extends Dao[String, GenericPerson](client) {
+case class GenericPersonDao() extends Dao[String, GenericPerson] {
 
   val namespace = "test"
 

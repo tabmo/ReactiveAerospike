@@ -16,7 +16,18 @@
 package eu.unicredit.reactive_aerospike
 
 import eu.unicredit.reactive_aerospike.future._
-object TwitterFactory extends Factory {
+
+object TwitterFactory extends Factory[com.twitter.util.Future] {
+
+  def toBase[T]: (Future[T]) => com.twitter.util.Future[T] =
+    (x: Future[T]) => {
+      x match {
+        case sf: TwitterFuture[T] =>
+          sf.inner
+        case _ => throw new Exception("Wrong future type")
+      }
+    }
+
   class TwitterFuture[+T](f: com.twitter.util.Future[T])
       extends Future[T] {
     val inner = f

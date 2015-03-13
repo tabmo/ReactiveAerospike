@@ -16,7 +16,6 @@
 package eu.unicredit.reactive_aerospike.data
 
 import com.aerospike.client.Key
-import scala.language.existentials
 import AerospikeValue.AerospikeValueConverter
 import AerospikeValue.AerospikeNull
 
@@ -74,9 +73,10 @@ object AerospikeKey {
         }
       },
       {
-        try
+        try {
+          key.userKey.validateKeyType()
           Some(converter.fromValue(key.userKey))
-        catch {
+        } catch {
           case _: Throwable => None
         }
       })(converter)

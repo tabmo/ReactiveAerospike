@@ -80,7 +80,7 @@ object AerospikeValue {
     def toAsV(i: Int): AerospikeInt = AerospikeInt(i)
     def fromValue(vi: Value): AerospikeInt = {
       assert(vi.getType() == ParticleType.INTEGER)
-      AerospikeInt(vi.toInteger())
+      AerospikeInt(vi.getObject().asInstanceOf[Long].toInt)
     }
   }
 
@@ -94,7 +94,7 @@ object AerospikeValue {
     def toAsV(i: Long): AerospikeLong = AerospikeLong(i)
     def fromValue(vi: Value): AerospikeLong = {
       assert(vi.getType() == ParticleType.INTEGER)
-      AerospikeLong(vi.toLong())
+      AerospikeLong(vi.getObject().asInstanceOf[Long])
     }
   }
 
@@ -109,7 +109,7 @@ object AerospikeValue {
     def toAsV(d: Double): AerospikeDouble = AerospikeDouble(d)
     def fromValue(vd: Value): AerospikeDouble = {
       assert(vd.getType() == ParticleType.INTEGER)
-      AerospikeDouble(java.lang.Double.longBitsToDouble(vd.toLong()))
+      AerospikeDouble(java.lang.Double.longBitsToDouble(vd.getObject().asInstanceOf[Long]))
     }
   }
 
