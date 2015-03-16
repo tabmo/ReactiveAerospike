@@ -3,7 +3,7 @@
  ReactiveAerospike is a pure functional and type safe Scalawrapper for the [Aerospike Java Client Library
 ](https://github.com/aerospike/aerospike-client-java).
 
- It makes use of the `async` client and return values are wrapped into Futures that can easily be mapped to your preferred Future implementation (though we also bundle standard Scala Futures as well as [Twitter Futures](https://github.com/twitter/util#futures))
+ It makes use of the `async` client and return values are wrapped into Futures that can easily be mapped to your preferred Future implementation (we bundle with default standard Scala Futures but we also provide an example that you can use with [Twitter Futures](https://github.com/twitter/util#futures))
 
 #### Usage
 Usually you just need these imports:
@@ -18,7 +18,7 @@ import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.model._
 
 //for built-in readers and converters
-import eu.unicredit.reactive_aerospike.data.AerospikeValue._
+import eu.unicredit.reactive_aerospike.data._
 
 //for conversion helpers to Scala Futures
 import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
@@ -30,7 +30,7 @@ A client can be easily instantiated by proving host and port for your running se
 val client = new AerospikeClient("192.168.59.103", 3000)
 ```
 
-ReactiveAerospike provides two levels of usage: [Direct]() and [ORM-like]().
+ReactiveAerospike provides two levels of usage: [Direct](#direct) and [ORM-like](#orm-like).
 
 #### Direct
 
@@ -41,7 +41,7 @@ An `AerospikeKey` usually requires a `namespace`, the name of the `set` and its 
 
 ```scala
 val key = AerospikeKey("test", "my-set",  42)
-//key: AerospikeKey[Int] = AerospikeKey(test,[B@68eea180,Some(my-set),Some(42))
+//key: AerospikeKey[Int] = AerospikeKey(test,Some(my-set),Some(42))
 ```
 
 **IMPORTANT note about Aerospike Keys**: Internally Aerospikes only cares about its [keys](https://github.com/aerospike/aerospike-client-java/blob/master/client/src/com/aerospike/client/Key.java) digests. By deafult the key value provided by the user is discarded. You're going to have to specifically define a `WritePolicy` with `sendKey = true` if you want Aerospike to store your key. 
@@ -93,8 +93,8 @@ An instance of `AerospikeRecord` will then contain your bins.
 val (k, r) = Await.result(client.get(key, recordReader), 5 millis)
 //k: AerospikeKey[_] = AerospikeKey(test,[B@4d37d02c,Some(my-set),Some(0))
 //r: AerospikeRecord = AerospikeRecord@5a04cc60 
-//TODO: missing toString for AerospikeRecord
 ```
+
 ```scala
 r.getBins
 //res0: Seq[AerospikeBin[_]] = List(AerospikeBin(x,1,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(y,2,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(z,3,AerospikeValue$AerospikeIntConverter$@58dd0316))
