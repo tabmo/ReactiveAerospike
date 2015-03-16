@@ -83,9 +83,9 @@ abstract class Dao[K <: Any, T <: Any](implicit _keyConverter: AerospikeValueCon
         try {
           objRead(foundKey, kr._2)
         } catch {
-          case _: Throwable => throw new Exception("Object not found or not deserializable")
+          case err: Throwable => throw new Exception("Object not found or not deserializable", err)
         }
-      case _ => throw new Exception("key is not of the secified type")
+      case ex => throw new Exception(s"key ${kr._1} is not of the secified type")
     }
 
   def getCreationKey: (T) => AerospikeKey[K] =
