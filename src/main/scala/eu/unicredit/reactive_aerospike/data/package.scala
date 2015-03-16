@@ -49,10 +49,14 @@ package object data {
   implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
     ab.inner
 
-  implicit def fromGenToInstanceBin[T <: Any](value: AerospikeValue[_]): AerospikeValue[T] =
-    value match {
-      case t: AerospikeValue[T] => t
-      case _ => throw new Exception("Cannot retrieve requested bin...")
+  implicit def fromGenToInstanceBin[X <: Any](value: AerospikeValue[_]): AerospikeValue[X] =
+    try {
+      val manif = scala.reflect.ClassManifestFactory.classType[X](value.base.getClass)
+      assert { manif.runtimeClass.isInstance(value.base) == true }
+      value.asInstanceOf[AerospikeValue[X]]
+    } catch {
+      case err: Throwable =>
+        throw new Exception("Cannot retrieve requested bin...")
     }
 
   //from and to Aerospike Key

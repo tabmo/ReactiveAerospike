@@ -36,11 +36,23 @@ class AerospikeRecord(
     type C = AerospikeValue[X]
     bins.find(bin =>
       bin.name == binName
-    ).map(bin =>
+    ).map(bin => {
       bin.value match {
-        case x: AerospikeValue[X] => Some(x)
+        case av: AerospikeValue[_] =>
+          try {
+            val manif = scala.reflect.ClassManifestFactory.classType[X](bin.value.base.getClass)
+            if (manif.runtimeClass.isInstance(bin.value.base))
+              Some(bin.value.asInstanceOf[AerospikeValue[X]])
+            else None
+          } catch {
+            case err: Throwable =>
+              err.printStackTrace
+              None
+          }
+
         case _ => None
       }
+    }
     ).flatten
   }
 
