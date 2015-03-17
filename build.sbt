@@ -4,7 +4,7 @@ version := "0.1.6"
 
 organization := "eu.unicredit"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 crossScalaVersions := Seq("2.9.2", "2.11.5")
 
@@ -20,6 +20,7 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.aerospike" % "aerospike-client" % "3.0.35",
+  "org.scala-lang" % "scala-reflect" % "2.11.6",
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
   "com.twitter" %% "util-collection" % "6.23.0" % "test"
 )
