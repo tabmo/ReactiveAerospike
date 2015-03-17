@@ -25,7 +25,7 @@ import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 A client can be easily instantiated by proving host and port for your running server
 
 ```scala
-val client = new AerospikeClient("192.168.59.103", 3000)
+val client = AerospikeClient("192.168.59.103", 3000)
 ```
 
 ReactiveAerospike provides two levels of usage: [Direct](#direct) and [ORM-like](#orm-like).
