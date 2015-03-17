@@ -127,7 +127,7 @@ Lastly, you need to define a `getKeyDigest` method that defines how your key dig
 In the end you should end with something like this:
 
 ```scala
-case class PersonDAO(client: AerospikeClient) extends Dao[String, Person](client) {
+case class PersonDAO() extends Dao[String, Person] {
 
   val namespace = "test"
   val setName = "people"
@@ -148,5 +148,33 @@ case class PersonDAO(client: AerospikeClient) extends Dao[String, Person](client
         record.get("age"))
 }
 ```
+
+With that code you're just set and ready-to-go.
+
+To persist your models on Aerospike you can write something like this:
+
+```scala
+    implicit val client = new AerospikeClient("localhost", 3000)(ScalaFactory)
+    implicit val personDao = PersonDao()
+
+    val bob = Person("rOBerT", "Bob", "Wood", 23)
+    val tim = Person("TImoTHy", "Tim", "Forest", 32)
+
+    //creating
+    personDao.create(bob)
+    personDao.create(tim)
+```
+
+That's it!
+
+## Authors:
+* Andrea Peruffo: <https://github.com/andreaTP>
+* Marco Firrincieli: <https://github.com/mfirry>
+
+Thanks for assistance and contributions:
+
+* Andrea Ferretti <http://github.com/andreaferretti>
+* Gianluca Sabena: <http://github.com/gianluca-sabena>
+
 
 
