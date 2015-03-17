@@ -18,10 +18,8 @@ import eu.unicredit.reactive_aerospike.data._
 import eu.unicredit.reactive_aerospike.model._
 
 //for built-in readers and converters
-import eu.unicredit.reactive_aerospike.data._
+import eu.unicredit.reactive_aerospike.data.AerospikeValue._
 
-//for conversion helpers to Scala Futures
-import eu.unicredit.reactive_aerospike.future.ScalaFactory.Helpers._
 ```
 
 A client can be easily instantiated by proving host and port for your running server
@@ -37,7 +35,7 @@ ReactiveAerospike provides two levels of usage: [Direct](#direct) and [ORM-like]
 Direct API lets you use the usual basic `put`, `get`, `delete` commands to interact with Aerospike.
 You will always need to provide your `key` for any operation.
 
-An `AerospikeKey` usually requires a `namespace`, the name of the `set` and its `value`.
+An `AerospikeKey` usually requires a `namespace`, the name of the `set` (Optional) and its `value`.
 
 ```scala
 val key = AerospikeKey("test", "my-set",  42)
@@ -45,7 +43,7 @@ val key = AerospikeKey("test", "my-set",  42)
 ```
 
 **IMPORTANT note about Aerospike Keys**: Internally Aerospikes only cares about its [keys](https://github.com/aerospike/aerospike-client-java/blob/master/client/src/com/aerospike/client/Key.java) digests. By deafult the key value provided by the user is discarded. You're going to have to specifically define a `WritePolicy` with `sendKey = true` if you want Aerospike to store your key. 
-You can go on using the key you have defined and pass it through your functions, but the original value would not be available, should you need it.
+You can go on using the key you have defined and pass it through your functions, but the original value would not be available, if you need it.
 
 Also note that implicit conversions are used to support transformations from your types to Aerospike values.
 
@@ -127,7 +125,7 @@ Lastly, you need to define a `getKeyDigest` method that defines how your key dig
 In the end you should end with something like this:
 
 ```scala
-case class PersonDAO() extends Dao[String, Person] {
+object PersonDAO() extends Dao[String, Person] {
 
   val namespace = "test"
   val setName = "people"
@@ -154,15 +152,14 @@ With that code you're just set and ready-to-go.
 To persist your models on Aerospike you can write something like this:
 
 ```scala
-    implicit val client = new AerospikeClient("localhost", 3000)(ScalaFactory)
-    implicit val personDao = PersonDao()
+    implicit val client = AerospikeClient("localhost", 3000)
 
     val bob = Person("rOBerT", "Bob", "Wood", 23)
     val tim = Person("TImoTHy", "Tim", "Forest", 32)
 
     //creating
-    personDao.create(bob)
-    personDao.create(tim)
+    PersonDAO.create(bob)
+    PersonDAO.create(tim)
 ```
 
 That's it!
