@@ -18,7 +18,7 @@ package eu.unicredit.reactive_aerospike.model.experimental
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 
-import eu.unicredit.reactive_aerospike.data.AerospikeKey
+import eu.unicredit.reactive_aerospike.data.{ AerospikeKey, AerospikeBinProto, AerospikeRecord }
 
 object DaoMacroImpl {
 
@@ -28,7 +28,7 @@ object DaoMacroImpl {
         x.name.decodedName.toString == "AerospikeKey"
       }).isDefined
 
-  def materializeDigestGennerator[T: c.WeakTypeTag](c: Context): c.Expr[DigestGenerator[T]] = {
+  def materializeDigestGennerator[T: c.WeakTypeTag](c: Context): c.Expr[(T) => Array[Byte]] = {
     import c.universe._
 
     val tpe = weakTypeOf[T]
@@ -44,11 +44,12 @@ object DaoMacroImpl {
       keyCondition(c)(s)
     }).get
 
-    c.Expr[DigestGenerator[T]] {
+    c.Expr[(T) => Array[Byte]] {
       q"""
       		import eu.unicredit.reactive_aerospike.data._
       		import eu.unicredit.reactive_aerospike.data.AerospikeValue._
      
+      		val dg =
     		new DigestGenerator[$tpe] {
     		
     			def get: ($tpe) => Array[Byte] = {
@@ -58,11 +59,13 @@ object DaoMacroImpl {
     			}
     		
     		}
+      
+      		dg.get
     		"""
     }
   }
 
-  def materializeBinSeqGennerator[T: c.WeakTypeTag](c: Context): c.Expr[BinSeqGenerator[T]] = {
+  def materializeBinSeqGennerator[T: c.WeakTypeTag](c: Context): c.Expr[Seq[AerospikeBinProto[T, _]]] = {
     import c.universe._
 
     val tpe = weakTypeOf[T]
@@ -88,11 +91,12 @@ object DaoMacroImpl {
         """
       })
 
-    c.Expr[BinSeqGenerator[T]] {
+    c.Expr[Seq[AerospikeBinProto[T, _]]] {
       q"""
       		import eu.unicredit.reactive_aerospike.data._
       		import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-     
+      		
+      		val bsg = 
     		new BinSeqGenerator[$tpe] {
     		
     			def get: Seq[AerospikeBinProto[$tpe, _]] = {
@@ -100,6 +104,8 @@ object DaoMacroImpl {
     			}
     			
     		}
+      
+      		bsg.get
     		"""
     }
   }
@@ -143,7 +149,7 @@ object DaoMacroImpl {
      
     		new ObjReadGenerator[$tpe] {
     			
-    			def get[K]: (AerospikeKey[K], AerospikeRecord) => $tpe =
+    			def apply[K]: (AerospikeKey[K], AerospikeRecord) => $tpe =
     				(key: AerospikeKey[K], record: AerospikeRecord) => {
     					new $tpe(
     						key.asInstanceOf[$keyType],

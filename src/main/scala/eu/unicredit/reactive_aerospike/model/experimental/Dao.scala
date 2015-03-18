@@ -28,14 +28,14 @@ trait BinSeqGenerator[T] {
 }
 
 trait ObjReadGenerator[T] {
-  def get[K]: (AerospikeKey[K], AerospikeRecord) => T
+  def apply[K]: (AerospikeKey[K], AerospikeRecord) => T
 }
 
 object Dao {
 
-  def macroKeyDigest[T]: DigestGenerator[T] = macro DaoMacroImpl.materializeDigestGennerator[T]
+  def macroKeyDigest[T]: (T) => Array[Byte] = macro DaoMacroImpl.materializeDigestGennerator[T]
 
-  def macroObjWrite[T]: BinSeqGenerator[T] = macro DaoMacroImpl.materializeBinSeqGennerator[T]
+  def macroObjWrite[T]: Seq[AerospikeBinProto[T, _]] = macro DaoMacroImpl.materializeBinSeqGennerator[T]
 
   def macroObjRead[T]: ObjReadGenerator[T] = macro DaoMacroImpl.materializeObjReadGennerator[T]
 

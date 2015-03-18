@@ -34,12 +34,12 @@ object MailDao extends Dao[String, Mail] {
   val setName = "mails"
 
   def getKeyDigest(obj: Mail): Array[Byte] =
-    Dao.macroKeyDigest[Mail].get(obj)
+    Dao.macroKeyDigest[Mail](obj)
 
   val objWrite: Seq[AerospikeBinProto[Mail, _]] =
-    Dao.macroObjWrite[Mail].get
+    Dao.macroObjWrite[Mail]
 
   val objRead: (AerospikeKey[String], AerospikeRecord) => Mail =
-    Dao.macroObjRead[Mail].get[String]
+    Dao.macroObjRead[Mail][String]
 
 }
