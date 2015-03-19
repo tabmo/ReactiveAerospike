@@ -5,6 +5,14 @@
 
  It makes use of the `async` client and return values are wrapped into Futures that can easily be mapped to your preferred Future implementation (we bundle with default standard Scala Futures but we also provide an example that you can use with [Twitter Futures](https://github.com/twitter/util#futures))
 
+ A Jar for the preliminary version is available on the Sonatype snapshots repository. You can add the repository with
+
+    resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+Then, you can add the following dependency in sbt:
+
+    dependencies += "eu.unicredit" %% "reactive-aerospike" % "0.2.0-SNAPSHOT"
+
 #### Usage
 Usually you just need these imports:
 

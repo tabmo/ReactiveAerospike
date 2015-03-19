@@ -1,12 +1,12 @@
+import SonatypeKeys._
+
 name := """reactive-aerospike"""
 
-version := "0.1.7"
+version := "0.2.0-SNAPSHOT"
 
 organization := "eu.unicredit"
 
 scalaVersion := "2.11.6"
-
-crossScalaVersions := Seq("2.9.2", "2.11.5")
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -32,3 +32,7 @@ parallelExecution in Test := false
 pomIncludeRepository := { x => false }
 
 scalariformSettings
+
+sonatypeSettings
+
+credentials += Credentials(Path.userHome / ".ivy2" / "sonatype.credentials")
