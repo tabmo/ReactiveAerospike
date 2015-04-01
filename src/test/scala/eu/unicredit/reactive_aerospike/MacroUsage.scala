@@ -25,6 +25,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import play.api.libs.json._
+
 class MacroUsage extends FlatSpec {
 
   /*
@@ -57,6 +59,37 @@ class MacroUsage extends FlatSpec {
     assert { mail.from == ret.from }
     assert { mail.to == ret.to }
     assert { mail.length == ret.length }
+
+  }
+
+  it should " gracefully compose with other conversions " in {
+    implicit val client = AerospikeClient("localhost", 3000)
+
+    val key: AerospikeKey[String] = AerospikeKey[String](JsonMailDao.namespace, JsonMailDao.setName, "prova")
+
+    val mail = Mail(
+      key,
+      "Andrea",
+      "Marco",
+      10)
+
+    try
+      Await.result(JsonMailDao.delete(key), 500.millis)
+    catch {
+      case _: Throwable =>
+    }
+
+    val originalJson: JsValue = JsonMailDao.mailJsonWrites.writes(mail)
+
+    Await.result(JsonMailDao.create(
+      JsonMailDao.mailJsonReads.reads(originalJson).get
+    ), 500.millis)
+
+    val ret = Await.result(JsonMailDao.read(key), 100.millis)
+
+    val returnedJson: JsValue = JsonMailDao.mailJsonWrites.writes(ret)
+
+    assert { originalJson === returnedJson }
 
   }
 
