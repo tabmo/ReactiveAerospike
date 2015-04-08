@@ -32,7 +32,7 @@ parallelExecution in Test := false
 
 pomIncludeRepository := { x => false }
 
-scalariformSettings
+//scalariformSettings
 
 sonatypeSettings
 
