@@ -13,3 +13,4 @@ scalastyle-config.xml
 .idea_modules/
 projectFilesBackup/
 
+/bin/
