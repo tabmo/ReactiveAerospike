@@ -11,7 +11,7 @@
 
 Then, you can add the following dependency in sbt:
 
-    dependencies += "eu.unicredit" %% "reactive-aerospike" % "0.2.0-SNAPSHOT"
+    dependencies += "eu.unicredit" %% "reactive-aerospike" % "0.2.1-SNAPSHOT"
 
 #### Usage
 Usually you just need these imports:
