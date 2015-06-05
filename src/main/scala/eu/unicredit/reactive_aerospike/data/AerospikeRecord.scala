@@ -71,13 +71,20 @@ class AerospikeRecordReader(val stub: Map[String, AerospikeValueConverter[_]]) {
 
   def getStub = stub
 
-  def extractor: Record => AerospikeRecord = (record: Record) =>
+  def extractor: Record => AerospikeRecord = (record: Record) => {
+    val generation =
+      if (record != null) record.generation
+      else 0
+    val expiration =
+      if (record != null) record.expiration
+      else 0
+      
     new AerospikeRecord(stub.map(bin =>
       AerospikeBin((bin._1, (record.bins.get(bin._1))), bin._2)).toSeq,
-      record.generation,
-      record.expiration
+      generation,
+      expiration
     )
-
+  }
 }
 
 object AerospikeRecordReader {
