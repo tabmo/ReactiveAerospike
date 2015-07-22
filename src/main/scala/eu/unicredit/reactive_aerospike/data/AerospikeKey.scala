@@ -15,6 +15,8 @@
 
 package eu.unicredit.reactive_aerospike.data
 
+import scala.util.control.NonFatal
+
 import com.aerospike.client.Key
 import AerospikeValue.AerospikeValueConverter
 import AerospikeValue.AerospikeNull
@@ -30,12 +32,12 @@ case class AerospikeKey[T <: Any](
 
   val converter = _converter
 
-  val inner = new Key(namespace, digest, setName.getOrElse(null),
+  val inner = new Key(namespace, digest, setName.orNull,
     {
       try {
         converter.toAsV(userKey.get)
       } catch {
-        case _: Throwable => AerospikeNull()
+        case NonFatal(_) => AerospikeNull()
       }
     }
   )
@@ -65,19 +67,13 @@ object AerospikeKey {
     AerospikeKey(
       key.namespace,
       key.digest,
-      {
-        if (key.setName != null) {
-          Some(key.setName)
-        } else {
-          None
-        }
-      },
+      Option(key.setName),
       {
         try {
           key.userKey.validateKeyType()
           Some(converter.fromValue(key.userKey))
         } catch {
-          case _: Throwable => None
+          case NonFatal(_) => None
         }
       })(converter)
 

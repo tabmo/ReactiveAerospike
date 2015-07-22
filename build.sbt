@@ -26,6 +26,7 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.aerospike" % "aerospike-client" % "3.1.3",
+  "ch.qos.logback" % "logback-classic" % "1.1.3",
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 

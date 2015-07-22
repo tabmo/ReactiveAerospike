@@ -20,22 +20,15 @@ import data.AerospikeValue._
 
 package object data {
 
-  //Aerospike Value implicits
-  implicit def fromNullToAS(n: Null) =
-    AerospikeValue.AerospikeNull()
+  implicit def fromNullToAS(n: Null) = AerospikeValue.AerospikeNull()
 
-  implicit def fromStringToAS(s: String) =
-    AerospikeString(s)
+  implicit def fromStringToAS(s: String) = AerospikeString(s)
 
-  implicit def fromIntToAS(i: Int) =
-    AerospikeInt(i.toInt)
-  implicit def fromLongToAS(l: Long) =
-    AerospikeLong(l)
-  implicit def fromDoubleToAS(d: Double) =
-    AerospikeDouble(d)
+  implicit def fromIntToAS(i: Int) = AerospikeInt(i)
+  implicit def fromLongToAS(l: Long) = AerospikeLong(l)
+  implicit def fromDoubleToAS(d: Double) = AerospikeDouble(d)
 
-  implicit def fromASVtoValueAS[T](x: AerospikeValue[T]) =
-    x.base
+  implicit def fromASVtoValueAS[T](x: AerospikeValue[T]) = x.base
 
   implicit def fromTupleToBin[T <: Any](t: (String, AerospikeValue[T]))(implicit converter: AerospikeValueConverter[T]): AerospikeBin[T] =
     AerospikeBin(t._1, t._2, converter)
@@ -46,22 +39,16 @@ package object data {
   implicit def fromTupleToABP[T, X](t: (String, (T => X)))(implicit converter: AerospikeValueConverter[X]) =
     AerospikeBinProto(t._1, t._2, converter)
 
-  implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin =
-    ab.inner
+  implicit def fromABToBin[T <: Any](ab: AerospikeBin[AerospikeValue[T]]): Bin = ab.inner
 
-  implicit def fromGenToInstanceBin[X <: Any](value: AerospikeValue[_]): AerospikeValue[X] =
-    try {
-      val manif = scala.reflect.ClassManifestFactory.classType[X](value.base.getClass)
-      assert { manif.runtimeClass.isInstance(value.base) == true }
-      value.asInstanceOf[AerospikeValue[X]]
-    } catch {
-      case err: Throwable =>
-        throw new Exception("Cannot retrieve requested bin...")
-    }
+  implicit def fromGenToInstanceBin[X <: Any](value: AerospikeValue[_]): AerospikeValue[X] = {
+    val manif = scala.reflect.ClassManifestFactory.classType[X](value.base.getClass)
+    assert(manif.runtimeClass.isInstance(value.base))
+    value.asInstanceOf[AerospikeValue[X]]
+  }
 
   //from and to Aerospike Key
-  implicit def fromAKToK[T <: Any](ak: AerospikeKey[AerospikeValue[T]]): Key =
-    ak.inner
+  implicit def fromAKToK[T <: Any](ak: AerospikeKey[AerospikeValue[T]]): Key = ak.inner
 
   //from Seq to Array of Bins
   implicit def fromSeqToArr[T <: Any](in: Seq[AerospikeBin[AerospikeValue[T]]]): Array[AerospikeBin[AerospikeValue[T]]] =

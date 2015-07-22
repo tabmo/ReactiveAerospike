@@ -18,18 +18,13 @@ package eu.unicredit.reactive_aerospike.data
 import com.aerospike.client.{ Bin, Value }
 import AerospikeValue.{ AerospikeValueConverter, AerospikeList, AerospikeMap }
 
-case class AerospikeBin[T <: Any](name: String, value: AerospikeValue[T],
-    converter: AerospikeValueConverter[T]) {
-
+case class AerospikeBin[T <: Any](name: String, value: AerospikeValue[T], converter: AerospikeValueConverter[T]) {
   val inner = new Bin(name, value.inner)
-
-  def toRecordValue = (name -> value.inner.getObject)
-
+  def toRecordValue = name -> value.inner.getObject
 }
 
 case class AerospikeBinProto[T, X](name: String, f: (T => X), converter: AerospikeValueConverter[X]) {
-  def apply(o: T) =
-    AerospikeBin(name, f(o))(converter)
+  def apply(o: T) = AerospikeBin(name, f(o))(converter)
 }
 
 object AerospikeBin {

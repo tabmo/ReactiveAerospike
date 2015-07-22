@@ -15,9 +15,13 @@
 
 package eu.unicredit.reactive_aerospike.data
 
-import com.aerospike.client.{ Record, Value }
+import scala.util.control.NonFatal
+
+import com.aerospike.client.Record
 import scala.collection.JavaConverters._
 import scala.collection.convert.WrapAsScala._
+import org.slf4j.LoggerFactory
+
 import AerospikeValue._
 
 class AerospikeRecord(
@@ -29,42 +33,34 @@ class AerospikeRecord(
 
   def get[X](binName: String): AerospikeValue[X] = {
     getOpt[X](binName).getOrElse(
-      throw new Exception(s"Bin name ${binName} not found"))
+      throw new Exception(s"Bin name $binName not found"))
   }
 
   def getOpt[X](binName: String): Option[AerospikeValue[X]] = {
     type C = AerospikeValue[X]
-    bins.find(bin =>
-      bin.name == binName
-    ).map(bin => {
-      bin.value match {
-        case av: AerospikeValue[_] =>
-          try {
-            val manif = scala.reflect.ClassManifestFactory.classType[X](bin.value.base.getClass)
-            if (manif.runtimeClass.isInstance(bin.value.base))
-              Some(bin.value.asInstanceOf[AerospikeValue[X]])
-            else None
-          } catch {
-            case err: Throwable =>
-              err.printStackTrace
-              None
-          }
-
-        case _ => None
-      }
+    bins
+      .find(_.name == binName)
+      .flatMap { bin =>
+        bin.value match {
+          case av: AerospikeValue[_] =>
+            try {
+              val manif = scala.reflect.ClassManifestFactory.classType[X](bin.value.base.getClass)
+              if (manif.runtimeClass.isInstance(bin.value.base))
+                Some(bin.value.asInstanceOf[AerospikeValue[X]])
+              else None
+            } catch {
+              case NonFatal(err) =>
+                AerospikeRecord.logger.error("Cannot call getOpt on AerospikeRecord", err)
+                None
+            }
+          case _ => None
+        }
     }
-    ).flatten
   }
 
-  def toRecordBins: Seq[(String, Object)] =
-    bins.map(_.toRecordValue)
+  def toRecordBins: Seq[(String, Object)] = bins.map(_.toRecordValue)
 
-  val inner =
-    new Record(
-      toRecordBins.toMap.asJava,
-      generation,
-      expiration
-    )
+  val inner = new Record(toRecordBins.toMap.asJava, generation, expiration)
 }
 
 class AerospikeRecordReader(val stub: Map[String, AerospikeValueConverter[_]]) {
@@ -72,15 +68,11 @@ class AerospikeRecordReader(val stub: Map[String, AerospikeValueConverter[_]]) {
   def getStub = stub
 
   def extractor: Record => AerospikeRecord = (record: Record) => {
-    val generation =
-      if (record != null) record.generation
-      else 0
-    val expiration =
-      if (record != null) record.expiration
-      else 0
-      
+    val generation = Option(record).map(_.generation).getOrElse(0)
+    val expiration = Option(record).map(_.expiration).getOrElse(0)
+
     new AerospikeRecord(stub.map(bin =>
-      AerospikeBin((bin._1, (record.bins.get(bin._1))), bin._2)).toSeq,
+      AerospikeBin((bin._1, record.bins.get(bin._1)), bin._2)).toSeq,
       generation,
       expiration
     )
@@ -88,15 +80,13 @@ class AerospikeRecordReader(val stub: Map[String, AerospikeValueConverter[_]]) {
 }
 
 object AerospikeRecordReader {
-
   def apply(bins: Seq[AerospikeBin[_]]): AerospikeRecordReader =
     new AerospikeRecordReader(bins.map(bin => bin.name -> bin.converter).toMap)
-
 }
 
 object AerospikeRecord {
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def apply(record: Record)(implicit recordReader: AerospikeRecordReader): AerospikeRecord =
     recordReader.extractor(record)
-
 }
