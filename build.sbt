@@ -2,28 +2,31 @@ import SonatypeKeys._
 
 name := """reactive-aerospike"""
 
-version := "0.2.1-SNAPSHOT"
+version := "1.0.0"
 
-organization := "eu.unicredit"
+organization := "io.tabmo"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq(
-  "-deprecation",
-  "-feature",
+  "-deprecation",           // Warn when deprecated API are used
+  "-feature",               // Warn for usages of features that should be importer explicitly
+  "-unchecked",             // Warn when generated code depends on assumptions
+  "-Ywarn-dead-code",       // Warn when dead code is identified
+  "-Ywarn-numeric-widen",   // Warn when numeric are widened
+  "-Xlint",                 // Additional warnings (see scalac -Xlint:help)
+  "-Ywarn-adapted-args",    // Warn if an argument list is modified to match the receive
   "-language:postfixOps",
   "-language:implicitConversions",
   "-language:reflectiveCalls",
   "-language:existentials",
   "-language:higherKinds"
+
 )
 
 libraryDependencies ++= Seq(
-  "com.aerospike" % "aerospike-client" % "3.1.1",
-  "org.scala-lang" % "scala-reflect" % "2.11.6",
-  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
-  "com.twitter" %% "util-collection" % "6.23.0" % "test",
-  "com.typesafe.play" % "play-json_2.11" % "2.4.0-RC1" % "test"
+  "com.aerospike" % "aerospike-client" % "3.1.3",
+  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 
 publishMavenStyle := true
@@ -31,8 +34,6 @@ publishMavenStyle := true
 parallelExecution in Test := false
 
 pomIncludeRepository := { x => false }
-
-//scalariformSettings
 
 sonatypeSettings
 
