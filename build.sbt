@@ -1,8 +1,6 @@
-import SonatypeKeys._
-
 name := """reactive-aerospike"""
 
-version := "1.0.0"
+version := "0.0.1"
 
 organization := "io.tabmo"
 
@@ -30,12 +28,10 @@ libraryDependencies ++= Seq(
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 
-publishMavenStyle := true
-
 parallelExecution in Test := false
 
-pomIncludeRepository := { x => false }
-
-sonatypeSettings
-
-credentials += Credentials(Path.userHome / ".ivy2" / "sonatype.credentials")
+/*
+ * Publish to tabmo organization on bintray
+ */
+licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
+bintrayOrganization := Some("tabmo")
