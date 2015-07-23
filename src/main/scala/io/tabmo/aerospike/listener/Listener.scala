@@ -1,4 +1,6 @@
-/* Copyright 2014 UniCredit S.p.A.
+/*
+* Copyright 2014 UniCredit S.p.A.
+* Copyright 2014 Tabmo.io
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,7 +15,7 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.listener
+package io.tabmo.aerospike.listener
 
 import scala.util.control.NonFatal
 
@@ -26,7 +28,7 @@ import com.aerospike.client.listener.{
   RecordArrayListener,
   RecordSequenceListener
 }
-import eu.unicredit.reactive_aerospike.data._
+import io.tabmo.aerospike.data.{AerospikeRecordReader, AerospikeRecord, AerospikeKey, AerospikeValue}
 import AerospikeValue.AerospikeValueConverter
 import scala.collection.immutable.Stream._
 import scala.concurrent.Future

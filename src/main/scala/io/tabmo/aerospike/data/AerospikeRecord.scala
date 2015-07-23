@@ -1,4 +1,6 @@
-/* Copyright 2014 UniCredit S.p.A.
+/*
+* Copyright 2014 UniCredit S.p.A.
+* Copyright 2014 Tabmo.io
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,13 +15,12 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike.data
+package io.tabmo.aerospike.data
 
 import scala.util.control.NonFatal
 
 import com.aerospike.client.Record
 import scala.collection.JavaConverters._
-import scala.collection.convert.WrapAsScala._
 import org.slf4j.LoggerFactory
 
 import AerospikeValue._

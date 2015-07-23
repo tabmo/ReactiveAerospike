@@ -1,4 +1,6 @@
-/* Copyright 2014 UniCredit S.p.A.
+/*
+* Copyright 2014 UniCredit S.p.A.
+* Copyright 2014 Tabmo.io
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,10 +15,10 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike
+package io.tabmo.aerospike
 
 import com.aerospike.client.{ Bin, Key }
-import data.AerospikeValue._
+import io.tabmo.aerospike.data.AerospikeValue._
 
 package object data {
 

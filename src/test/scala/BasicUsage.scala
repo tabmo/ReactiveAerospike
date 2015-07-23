@@ -1,4 +1,6 @@
-/* Copyright 2014 UniCredit S.p.A.
+/*
+* Copyright 2014 UniCredit S.p.A.
+* Copyright 2014 Tabmo.io
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -13,18 +15,19 @@
 * limitations under the License.
 */
 
-package eu.unicredit.reactive_aerospike
+package io.tabmo.aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
 
 import com.aerospike.client.query.IndexType
+
 import org.scalatest._
 
-import eu.unicredit.reactive_aerospike.client._
-import eu.unicredit.reactive_aerospike.data.AerospikeValue._
-import eu.unicredit.reactive_aerospike.data._
+import io.tabmo.aerospike.client._
+import io.tabmo.aerospike.data._
+import io.tabmo.aerospike.data.AerospikeValue._
 
 class BasicUsage extends FlatSpec {
 
@@ -144,7 +147,7 @@ class BasicUsage extends FlatSpec {
 
   it should "accept long values" in {
     val result = Await.result(for {
-      key <- client.put(AerospikeKey("test", "data", "long"), Seq(AerospikeBin("value", Long.MaxValue)))
+      key <- client.put(AerospikeKey("test", "io/tabmo/aerospike/data", "long"), Seq(AerospikeBin("value", Long.MaxValue)))
       bin <- client.get(key, new AerospikeRecordReader(Map("value" -> AerospikeLongConverter)))
       _ <- client.delete(key)
     } yield bin._2.get[Long]("value"), 10.seconds)

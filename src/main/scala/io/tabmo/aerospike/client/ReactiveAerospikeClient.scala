@@ -1,4 +1,6 @@
-/* Copyright 2014 UniCredit S.p.A.
+/*
+* Copyright 2014 UniCredit S.p.A.
+* Copyright 2014 Tabmo.io
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -12,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package eu.unicredit.reactive_aerospike.client
+package io.tabmo.aerospike.client
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,8 +25,8 @@ import com.aerospike.client.async.{AsyncClient, AsyncClientPolicy}
 import com.aerospike.client.policy._
 import com.aerospike.client.query.{IndexType, Filter, Statement}
 
-import eu.unicredit.reactive_aerospike.data._
-import eu.unicredit.reactive_aerospike.listener._
+import io.tabmo.aerospike.data._
+import io.tabmo.aerospike.listener._
 
 object ReactiveAerospikeClient {
 
