@@ -42,6 +42,12 @@ val client = ReactiveAerospikeClient("192.168.59.103", 3000)
 val client = ReactiveAerospikeClient(new AsyncClientPolicy(), Seq("server1:3000", "server2:3000", "server3:3000"))
 ```
 
+Don't forget to close the connection when your app shutdown.
+
+```
+client.asyncClient.close()
+```
+
 Direct API lets you use the usual basic `put`, `get`, `delete` commands to interact with Aerospike.
 You will always need to provide your `key` for any operation.
 
@@ -106,6 +112,41 @@ val (k, r) = Await.result(client.get(key, recordReader), 5 millis)
 r.getBins
 //res0: Seq[AerospikeBin[_]] = List(AerospikeBin(x,1,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(y,2,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(z,3,AerospikeValue$AerospikeIntConverter$@58dd0316))
 ```
+
+## Sample usage
+
+```scala
+
+val writePolicyWithTTL = {
+  val policy = new WritePolicy(aerospike.asyncClient.asyncWritePolicyDefault) // clone default policy
+  policy.expiration = 60 * 60 * 24 * 30 // 30 days
+  policy
+}
+
+val key = AerospikeKey("myNamespace", "persons", 123456)
+val bins = Seq(
+  AerospikeBin("name", "julien"),
+  AerospikeBin("id", 123456L),
+  AerospikeBin("counter", 0L)
+)
+
+val counterReader = new AerospikeRecordReader(
+  Map("counter" -> AerospikeLongConverter)
+)
+  
+
+val saveOperation = aerospike.put(key, bins)(writePolicyWithTTL)
+val updateCounterOperation = aeropsike.add(key, Seq(AerospikeBin("counter", 0L))) // 0L is not used, just the name of the bin is required
+val readCounterOperation = aerospike.get(key, counterReader)
+
+val result: Future[Long] = for {
+  _ <- saveOperation
+  _ <- updateCounterOperation
+  (key, record) <- readCounterOperation
+} yield record.get[Long]("value").base
+  
+```
+
 
 ## Authors
 * Julien Lafont: <https://github.com/studiodev>
