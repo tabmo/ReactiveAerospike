@@ -7,7 +7,13 @@
 
 ## Installation
 
-TODO
+Add in your build.sbt
+
+```
+resolvers += "Tabmo Bintray" at "https://dl.bintray.com/tabmo/maven"
+
+libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "0.0.1"
+```
 
 ## Usage
 
@@ -25,7 +31,14 @@ import io.tabmo.aerospike.data.AerospikeValue._
 A client can be easily instantiated by proving host and port for your running server
 
 ```scala
+
+import com.aerospike.client.async.AsyncClientPolicy
+import io.tabmo.aerospike.client.ReactiveAerospikeClient
+
+// Connect to only one instance
 val client = ReactiveAerospikeClient("192.168.59.103", 3000)
+
+// Connect ton many instances
 val client = ReactiveAerospikeClient(new AsyncClientPolicy(), Seq("server1:3000", "server2:3000", "server3:3000"))
 ```
 
