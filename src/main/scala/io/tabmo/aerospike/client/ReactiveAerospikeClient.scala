@@ -152,13 +152,28 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
     rl.result.map(x => x.key_records)
   }
 
-  def queryEqual[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, filter: AerospikeBin[_])(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+  def queryEqualLong[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, binName: String, value: Long)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
     val statement = new Statement()
     statement.setNamespace(key_stub.namespace)
     key_stub.setName.foreach(statement.setSetName)
 
     statement.setFilters(
-      Filter.equal(filter.name, filter.value.inner.toString)
+      Filter.equal(binName, value)
+    )
+
+    implicit val keyConverter = key_stub.converter
+    val sl = AerospikeSequenceReadListener[T](recordReader)
+    asyncClient.query(qpolicy, sl, statement)
+    sl.result.map(x => x.key_records)
+  }
+
+  def queryEqualString[T](key_stub: AerospikeKey[T], recordReader: AerospikeRecordReader, binName: String, value: String)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[(AerospikeKey[_], AerospikeRecord)]] = {
+    val statement = new Statement()
+    statement.setNamespace(key_stub.namespace)
+    key_stub.setName.foreach(statement.setSetName)
+
+    statement.setFilters(
+      Filter.equal(binName, value)
     )
 
     implicit val keyConverter = key_stub.converter
@@ -182,7 +197,7 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
     sl.result.map(x => x.key_records)
   }
 
-  def queryEqualAggregateMap[T](namespace: String, set: String, filter: AerospikeBin[_],
+  def queryEqualLongAggregateMap[T](namespace: String, set: String, binName: String, value: Long,
     classloader: ClassLoader, resourcePath: String, packageName: String, functionName: String, functionArgs: AerospikeValue[_]*)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[Map[String, _]]] = {
 
     val statement = new Statement()
@@ -191,7 +206,29 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
     statement.setAggregateFunction(classloader, resourcePath, packageName, functionName, functionArgs.map(_.inner): _*)
 
     statement.setFilters(
-        Filter.equal(filter.name, filter.value.inner.toString)
+      Filter.equal(binName, value)
+    )
+
+    Future {
+      val result = asyncClient.queryAggregate(qpolicy, statement)
+      result.iterator().asScala.toList.map {
+        case r: java.util.HashMap[_, _] => r.asScala.toMap.asInstanceOf[Map[String, _]]
+        case r => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
+      }
+    }
+  }
+
+
+  def queryEqualStringAggregateMap[T](namespace: String, set: String, binName: String, value: String,
+    classloader: ClassLoader, resourcePath: String, packageName: String, functionName: String, functionArgs: AerospikeValue[_]*)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Seq[Map[String, _]]] = {
+
+    val statement = new Statement()
+    statement.setNamespace(namespace)
+    statement.setSetName(set)
+    statement.setAggregateFunction(classloader, resourcePath, packageName, functionName, functionArgs.map(_.inner): _*)
+
+    statement.setFilters(
+      Filter.equal(binName, value)
     )
 
     Future {

@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "0.0.2"
+version := "0.0.3"
 
 organization := "io.tabmo"
 
@@ -19,7 +19,6 @@ scalacOptions ++= Seq(
   "-language:reflectiveCalls",
   "-language:existentials",
   "-language:higherKinds"
-
 )
 
 libraryDependencies ++= Seq(
