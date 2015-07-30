@@ -37,6 +37,10 @@ class AerospikeRecord(
       throw new Exception(s"Bin name $binName not found"))
   }
 
+  def getAs[X](binName: String): X = {
+    get[X](binName).base
+  }
+
   def getOpt[X](binName: String): Option[AerospikeValue[X]] = {
     type C = AerospikeValue[X]
     bins
@@ -57,6 +61,10 @@ class AerospikeRecord(
           case _ => None
         }
     }
+  }
+
+  def getAsOpt[X](binName: String): Option[X] = {
+    getOpt[X](binName).map(_.base)
   }
 
   def toRecordBins: Seq[(String, Object)] = bins.map(_.toRecordValue)

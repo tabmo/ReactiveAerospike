@@ -113,6 +113,11 @@ r.getBins
 //res0: Seq[AerospikeBin[_]] = List(AerospikeBin(x,1,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(y,2,AerospikeValue$AerospikeIntConverter$@58dd0316), AerospikeBin(z,3,AerospikeValue$AerospikeIntConverter$@58dd0316))
 ```
 
+```scala
+r.getAs[Int]("x")
+//res0: Int: 3
+```
+
 ## Sample usage
 
 ```scala
@@ -143,10 +148,9 @@ val result: Future[Long] = for {
   _ <- saveOperation
   _ <- updateCounterOperation
   (key, record) <- readCounterOperation
-} yield record.get[Long]("value").base
+} yield record.getAs[Long]("value")
   
 ```
-
 
 ## Authors
 * Julien Lafont: <https://github.com/studiodev>

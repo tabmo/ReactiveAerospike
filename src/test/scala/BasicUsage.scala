@@ -67,9 +67,9 @@ class BasicUsage extends FlatSpec {
         5.seconds)
 
     assert { key == theKey }
-    assert { x == theRecord.get[Double]("x").base }
-    assert { y == theRecord.get[Long]("y").base }
-    assert { z == theRecord.get[String]("z").base }
+    assert { x == theRecord.getAs[Double]("x") }
+    assert { y == theRecord.getAs[Long]("y") }
+    assert { z == theRecord.getAs[String]("z") }
   }
 
   it should "save and retrieve complex data" in {
@@ -150,9 +150,9 @@ class BasicUsage extends FlatSpec {
       key <- client.put(AerospikeKey("test", "io/tabmo/aerospike/data", "long"), Seq(AerospikeBin("value", Long.MaxValue)))
       bin <- client.get(key, new AerospikeRecordReader(Map("value" -> AerospikeLongConverter)))
       _ <- client.delete(key)
-    } yield bin._2.get[Long]("value"), 10.seconds)
+    } yield bin._2.getAs[Long]("value"), 10.seconds)
 
-    assert { result.base == Long.MaxValue }
+    assert { result == Long.MaxValue }
   }
 
 }

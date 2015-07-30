@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "0.0.1"
+version := "0.0.2"
 
 organization := "io.tabmo"
 
@@ -34,4 +34,5 @@ parallelExecution in Test := false
  * Publish to tabmo organization on bintray
  */
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
+
 bintrayOrganization := Some("tabmo")
