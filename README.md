@@ -12,7 +12,7 @@ Add in your build.sbt
 ```
 resolvers += "Tabmo Bintray" at "https://dl.bintray.com/tabmo/maven"
 
-libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "0.0.1"
+libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "0.0.3"
 ```
 
 ## Usage
