@@ -277,7 +277,7 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
   }
 
 
-  def rawQueryRange[K](namespace: String, set: String, bins: Seq[String], filterBinName: String, rangeMin: Long, rangeMax: Long)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Map[K, Record]] = {
+  def rawQueryRange(namespace: String, set: String, bins: Seq[String], filterBinName: String, rangeMin: Long, rangeMax: Long)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Map[Key, Record]] = {
     val statement = new Statement()
     statement.setNamespace(namespace)
     statement.setSetName(set)
@@ -288,12 +288,11 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
     )
 
     val listener = new RecordSequenceListener() {
-      val promise = scala.concurrent.Promise.apply[Map[K, Record]]()
-      private val stream = Map.newBuilder[K, Record]
+      val promise = scala.concurrent.Promise.apply[Map[Key, Record]]()
+      private val stream = Map.newBuilder[Key, Record]
 
       override def onRecord(key: Key, record: Record) = {
-        val keyAsK = key.userKey.getObject.asInstanceOf[K]
-        stream += ((keyAsK, record))
+        stream += ((key, record))
       }
 
       override def onFailure(exception: AerospikeException) = promise.failure(exception)
