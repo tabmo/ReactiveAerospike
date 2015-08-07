@@ -20,7 +20,8 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters._
 
-import com.aerospike.client.{Language, AerospikeException, Host}
+import com.aerospike.client.listener.RecordSequenceListener
+import com.aerospike.client._
 import com.aerospike.client.async.{AsyncClient, AsyncClientPolicy}
 import com.aerospike.client.policy._
 import com.aerospike.client.query.{IndexType, Filter, Statement}
@@ -274,6 +275,61 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
       asyncClient.dropIndex(rpolicy, namespace, setName, indexName)
     }
   }
+
+
+  def rawQueryRange[K](namespace: String, set: String, bins: Seq[String], filterBinName: String, rangeMin: Long, rangeMax: Long)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Map[K, Record]] = {
+    val statement = new Statement()
+    statement.setNamespace(namespace)
+    statement.setSetName(set)
+    statement.setBinNames(bins: _*)
+
+    statement.setFilters(
+      Filter.range(filterBinName, rangeMin, rangeMax)
+    )
+
+    val listener = new RecordSequenceListener() {
+      val promise = scala.concurrent.Promise.apply[Map[K, Record]]()
+      private val stream = Map.newBuilder[K, Record]
+
+      override def onRecord(key: Key, record: Record) = {
+        val keyAsK = key.userKey.getObject.asInstanceOf[K]
+        stream += ((keyAsK, record))
+      }
+
+      override def onFailure(exception: AerospikeException) = promise.failure(exception)
+      override def onSuccess() = promise.success(stream.result())
+    }
+
+    asyncClient.query(qpolicy, listener, statement)
+    listener.promise.future
+  }
+
+  def rawQueryEqualLong(namespace: String, set: String, bins: Seq[String], binName: String, value: Long)(implicit qpolicy: QueryPolicy = policy.queryPolicyDefault): Future[Map[Key, Record]] = {
+    val statement = new Statement()
+    statement.setNamespace(namespace)
+    statement.setSetName(set)
+    statement.setBinNames(bins: _*)
+
+    statement.setFilters(
+      Filter.equal(binName, value)
+    )
+
+    val listener = new RecordSequenceListener() {
+      val promise = scala.concurrent.Promise.apply[Map[Key, Record]]()
+      private val stream = Map.newBuilder[Key, Record]
+
+      override def onRecord(key: Key, record: Record) = {
+        stream += ((key, record))
+      }
+
+      override def onFailure(exception: AerospikeException) = promise.failure(exception)
+      override def onSuccess() = promise.success(stream.result())
+    }
+
+    asyncClient.query(qpolicy, listener, statement)
+    listener.promise.future
+  }
+
 
   /*def executeUDF[T](key_stub: AerospikeKey[T], packageName: String, functionName: String, args: AerospikeValue[_]*)(implicit wpolicy: WritePolicy = policy.asyncWritePolicyDefault): Future[_] = {
     Future {

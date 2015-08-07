@@ -128,8 +128,8 @@ class BasicUsage extends FlatSpec {
       r2 <- client.put(AerospikeKey("test", "persons", "julien2"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 14)))
       r3 <- client.put(AerospikeKey("test", "persons", "pierre"), Seq(AerospikeBin("name", "pierre"), AerospikeBin("age", 20)))
       _ <- client.registerUDF(this.getClass.getClassLoader, "persons.lua", "persons.lua")
-      r <- client.queryEqualAggregateMap(
-        "test", "persons", AerospikeBin("name", "julien"),
+      r <- client.queryEqualStringAggregateMap(
+        "test", "persons", "name", "julien",
         this.getClass.getClassLoader, "persons.lua",
         "persons", "filterByAge", 18
       )
@@ -153,6 +153,25 @@ class BasicUsage extends FlatSpec {
     } yield bin._2.getAs[Long]("value"), 10.seconds)
 
     assert { result == Long.MaxValue }
+  }
+
+  it should "allow to use low level methods" in {
+    val result = Await.result(for {
+      indexName <- client.createIndex("test", "persons", "age", IndexType.NUMERIC)
+      r1 <- client.put(AerospikeKey("test", "persons", "julien"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 26L)))
+      r2 <- client.put(AerospikeKey("test", "persons", "julien2"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 14L)))
+      r3 <- client.put(AerospikeKey("test", "persons", "pierre"), Seq(AerospikeBin("name", "pierre"), AerospikeBin("age", 26L)))
+      r <- client.rawQueryEqualLong("test", "persons", Seq("name", "age"), "age", 26)
+      _ <- client.dropIndex("test", "persons", indexName)
+      _ <- client.delete(r1)
+      _ <- client.delete(r2)
+      _ <- client.delete(r3)
+    } yield r, 10.seconds)
+
+    assert { result.size == 2 }
+    assert { result.head._2.getLong("age") == 26 }
+    assert { result.head._2.getString("name") == "julien" }
+    assert { result.last._2.getString("name") == "pierre"}
   }
 
 }
