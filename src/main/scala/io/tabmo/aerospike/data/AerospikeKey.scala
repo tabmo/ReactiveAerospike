@@ -1,111 +1,40 @@
-/*
-* Copyright 2014 UniCredit S.p.A.
-* Copyright 2014 Tabmo.io
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
-
 package io.tabmo.aerospike.data
 
-import scala.util.control.NonFatal
+import scala.util.Try
 
-import com.aerospike.client.Key
-import AerospikeValue.AerospikeValueConverter
-import AerospikeValue.AerospikeNull
+import com.aerospike.client.command.Buffer
+import com.aerospike.client.{Value, Key}
 
-case class AerospikeKey[T <: Any](
-    namespace: String,
-    digest: Array[Byte],
-    originalSetName: Option[String] = None,
-    originalUserKey: Option[AerospikeValue[T]] = None)(implicit _converter: AerospikeValueConverter[T]) {
-
-  val setName = originalSetName
-  val userKey = originalUserKey
-
-  val converter = _converter
-
-  val inner = new Key(namespace, digest, setName.orNull,
-    {
-      try {
-        converter.toAsV(userKey.get)
-      } catch {
-        case NonFatal(_) => AerospikeNull()
-      }
-    }
-  )
-
-  override def equals(k: Any): Boolean = k match {
-    case key: AerospikeKey[T] => this.inner == key.inner
-    case _ => false
+case class AerospikeKey[T](inner: Key)(implicit keyConverter: AerospikeKeyConverter[T]) {
+  val namespace = inner.namespace
+  val setName = Option(inner.setName)
+  val userKey = {
+    Try {
+      inner.userKey.validateKeyType()
+      keyConverter.convert(inner.userKey)
+    }.toOption
   }
 
+  override def toString = {
+    val stringKey = userKey.map(_.toString).getOrElse(Buffer.bytesToHexString(inner.digest))
+    namespace + ":" + setName.getOrElse("/") + ":" + stringKey
+  }
 }
 
 object AerospikeKey {
 
-  def computeDigest[T <: Any](setName: String, key: AerospikeValue[T]): Array[Byte] =
-    Key.computeDigest(setName, key.inner)
+  import io.tabmo.aerospike.converter._
 
-  def apply[T <: Any](namespace: String,
-    setName: String,
-    userKey: T)(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
-    AerospikeKey(
-      namespace,
-      computeDigest(setName,
-        converter.toAsV(userKey)),
-      Some(setName), Some(converter.toAsV(userKey)))(converter)
+  def apply(namespace: String, setName: String, value: Long): AerospikeKey[Long] = {
+    AerospikeKey[Long](new Key(namespace, setName, value))
+  }
 
-  def apply[T <: Any](key: Key)(implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
-    AerospikeKey(
-      key.namespace,
-      key.digest,
-      Option(key.setName),
-      {
-        try {
-          key.userKey.validateKeyType()
-          Some(converter.fromValue(key.userKey))
-        } catch {
-          case NonFatal(_) => None
-        }
-      })(converter)
+  def apply(namespace: String, setName: String, value: String): AerospikeKey[String] = {
+    AerospikeKey[String](new Key(namespace, setName, value))
+  }
 
-  def apply[T <: Any](namespace: String,
-    digest: Array[Byte],
-    converter: AerospikeValueConverter[T]): AerospikeKey[T] =
-    AerospikeKey(
-      namespace,
-      digest,
-      None, None
-    )(converter)
+}
 
-  def apply[T <: Any](namespace: String,
-    setName: String,
-    digest: Array[Byte])(
-      implicit converter: AerospikeValueConverter[T]): AerospikeKey[T] =
-    AerospikeKey(
-      namespace,
-      digest,
-      Some(setName), None
-    )(converter)
-
-  def apply[T <: Any](
-    namespace: String,
-    setName: String,
-    userKey: AerospikeValue[T],
-    converter: AerospikeValueConverter[T]): AerospikeKey[T] =
-    AerospikeKey(
-      namespace,
-      computeDigest(setName,
-        userKey),
-      Some(setName), Some(userKey))(converter)
+trait AerospikeKeyConverter[T] {
+  def convert(userKey: Value): T
 }

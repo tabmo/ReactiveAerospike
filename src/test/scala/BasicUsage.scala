@@ -1,177 +1,360 @@
-/*
-* Copyright 2014 UniCredit S.p.A.
-* Copyright 2014 Tabmo.io
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
-
 package io.tabmo.aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent._
-import scala.concurrent.duration._
+import java.util.Date
 
-import com.aerospike.client.query.IndexType
+import com.aerospike.client.policy.WritePolicy
 
-import org.scalatest._
+import org.scalatest.BeforeAndAfterAll
 
 import io.tabmo.aerospike.client._
-import io.tabmo.aerospike.data._
-import io.tabmo.aerospike.data.AerospikeValue._
+import io.tabmo.aerospike.converter._
+import io.tabmo.aerospike.data.{AerospikeKey, Bin}
 
-class BasicUsage extends FlatSpec {
+class BasicUsage extends CustomSpec with BeforeAndAfterAll {
 
-  val client = ReactiveAerospikeClient("aerospikeovh1", 3000)
+  val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)
 
-  val key = AerospikeKey("test", "demokey", "123")
+  val ns = "test"
+  val set = "unittest1"
+  val neutral = Seq(Bin("v", 0))
+  val complex = Seq(Bin("string", "hello"), Bin("long", 123L))
 
-  val x = 1.9
-  val y = 2014L
-  val z = "tre"
+  def clean(key: AerospikeKey[_], keys: AerospikeKey[_]*) = (key +: keys).foreach(k => ready(client.delete(k)))
 
-  "An Aerospike client" should "save sequences of bins under a given key" in {
-
-    val bin1 = AerospikeBin("x", x)
-    val bin2 = AerospikeBin("y", y)
-    val bin3 = AerospikeBin("z", z)
-
-    val aKey: Future[AerospikeKey[String]] =
-      client.put(key, Seq(bin1, bin2, bin3))
-
-    val result = Await.result(aKey, 5.seconds)
-
-    assert { key == result }
+  override protected def afterAll() = {
+    client.close()
   }
 
-  it should "retrieve the record" in {
-    //a record reader is required for reading
-    val recordReader = new AerospikeRecordReader(
-      Map("x" -> AerospikeDoubleConverter,
-        "y" -> AerospikeLongConverter,
-        "z" -> AerospikeStringConverter))
+  "PUT operation" should {
 
-    //when reading/getting you always get back a couple (key, record)
-    val (theKey, theRecord) =
-      Await.result(
-        client.get(key, recordReader),
-        5.seconds)
+    "allow to save a bin with String key and String value" in {
+      val key = AerospikeKey(ns, set, "julien")
+      val bin = Bin("name", "julien")
+      val result = client.put(key, Seq(bin))
 
-    assert { key == theKey }
-    assert { x == theRecord.getAs[Double]("x") }
-    assert { y == theRecord.getAs[Long]("y") }
-    assert { z == theRecord.getAs[String]("z") }
+      whenReady(result) { r =>
+        assert { r === key }
+        assert { r.userKey === Some("julien") }
+      }
+
+      clean(key)
+    }
+
+    "forbid to save other types than Long or String" in {
+      assertDoesNotCompile("""
+         client.put(key, Bin("x", 1.0d))
+      """)
+
+      assertDoesNotCompile("""
+         client.put(key, Bin("x", 1.0f))
+      """)
+
+      assertDoesNotCompile("""
+         client.put(key, Bin("x", 'c'))
+      """)
+
+      val date = new Date
+      assertDoesNotCompile("""
+         client.put(key, Bin("x", date))
+      """)
+    }
+
+    "allow to save a bin with Long key and Long value" in {
+      val key = AerospikeKey(ns, set, 1)
+      val bin = Bin("age", 26)
+      val result = client.put(key, Seq(bin))
+
+      whenReady(result) { r =>
+        assert { r === key }
+        assert { r.userKey === Some(1L) }
+      }
+
+      clean(key)
+    }
+
+    "allow to save mixed bin" in {
+      val key = AerospikeKey(ns, set, "julien")
+      val bins = Seq(Bin("name", "julien"), Bin("age", 26))
+      val result = client.put(key, bins)
+
+      whenReady(result) { r =>
+        assert { r === key }
+      }
+
+      clean(key)
+    }
   }
 
-  it should "save and retrieve complex data" in {
-    import scala.language.existentials
+  "GET operation" should {
 
-    val aListOfInt = AerospikeList(1, 2, 3)
-    val anotherListOfInt = AerospikeList(4, 5, 6)
+    val key = AerospikeKey(ns, set, "testget")
+    val bins = Seq(Bin("foo", "bar"), Bin("max", Long.MaxValue), Bin("min", Long.MinValue))
 
-    val myListOfLists = AerospikeList(aListOfInt, anotherListOfInt)
+    "Read all bins of a record" in {
+      ready(client.put(key, bins))
+      val result = client.get(key)
 
-    val myMap = AerospikeMap("one" -> 1, "" +
-      "two" -> 2)
+      whenReady(result) { r =>
+        assert { r.getString("foo") === "bar" }
+        assert { r.getLong("max") === Long.MaxValue }
+        assert { r.getLong("min") === Long.MinValue }
+      }
 
-    val complexPutOperation =
-      client.put(key, Seq(
-        AerospikeBin("myListOfLists", myListOfLists),
-        AerospikeBin("myMap", myMap)))
+      clean(key)
+    }
 
-    val aKey = Await.result(complexPutOperation, 5.seconds)
+    "Read some bins of a record" in {
+      ready(client.put(key, bins))
+      val result = client.get(key, Seq("foo"))
 
-    assert { key == aKey }
+      whenReady(result) { r =>
+        assert { r.exists("foo") === true }
+        assert { r.exists("max") === false }
+      }
 
-    //expliciting the implicits just to show them
-    implicit val listConverter = AerospikeListConverter()(AerospikeListConverter()(AerospikeIntConverter))
-    implicit val mapConverter = AerospikeMapConverter()(AerospikeStringConverter, AerospikeIntConverter)
+      clean(key)
+    }
 
-    val recordReader = new AerospikeRecordReader(
-      Map("myListOfLists" -> listConverter, "myMap" -> mapConverter))
-
-    val (theKey, theRecord) = Await.result(
-      client.get(aKey, recordReader), //get
-      5.seconds)
-
-    assert { key == theKey }
-    //Syntax have to be improved here... but engine works...
-    assert { 4 == theRecord.get[List[AerospikeList[Int]]]("myListOfLists").base(1).base(0).base }
-    assert { 2 == theRecord.get[Map[AerospikeString, AerospikeInt]]("myMap").base.map(x => x._1.base -> x._2.base).get("two").get }
   }
 
-  /*it should "create and drop index" in {
-    val result = Await.result(for {
-      indexName <- client.createIndex("test", "persons", "name", IndexType.STRING)
-      r1 <-  client.put(AerospikeKey("test", "persons", "julien"), Seq(AerospikeBin("name", "julien")))
-      bin <- client.queryEqual(r1, new AerospikeRecordReader(Map("name" -> AerospikeStringConverter)), AerospikeBin("name", "julien"))
-      _ <- client.dropIndex("test", "persons", indexName)
-    } yield bin.head._2.get[String]("name").base, 10.seconds)
+  "APPEND operation" should {
 
-    assert { result == "julien" }
-  }*/
+    val key = AerospikeKey(ns, set, "testappend")
 
-  it should "call aggregate query" in {
+    "concatenate a string in a bin " in {
+      ready(client.put(key, Seq(Bin("foo", "hello"))))
+      ready(client.append(key, Seq(Bin("foo", "world"))))
+      val result = client.get(key, Seq("foo"))
 
-    val result = Await.result(for {
-      indexName <- client.createIndex("test", "persons", "name", IndexType.STRING)
-      r1 <- client.put(AerospikeKey("test", "persons", "julien"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 26)))
-      r2 <- client.put(AerospikeKey("test", "persons", "julien2"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 14)))
-      r3 <- client.put(AerospikeKey("test", "persons", "pierre"), Seq(AerospikeBin("name", "pierre"), AerospikeBin("age", 20)))
-      _ <- client.registerUDF(this.getClass.getClassLoader, "persons.lua", "persons.lua")
-      r <- client.queryEqualStringAggregateMap(
-        "test", "persons", "name", "julien",
-        this.getClass.getClassLoader, "persons.lua",
-        "persons", "filterByAge", 18
-      )
-      _ <- client.dropIndex("test", "persons", indexName)
-      _ <- client.delete(r1)
-      _ <- client.delete(r2)
-      _ <- client.delete(r3)
-      _ <- client.removeUDF("persons.lua")
-    } yield r, 10.seconds)
+      whenReady(result) { r =>
+        assert { r.getString("foo") === "helloworld" }
+      }
 
-    assert { result.size == 1 }
-    assert { result.head("name") == "julien" }
-    assert { result.head("age") == 26 }
+      clean(key)
+    }
   }
 
-  it should "accept long values" in {
-    val result = Await.result(for {
-      key <- client.put(AerospikeKey("test", "io/tabmo/aerospike/data", "long"), Seq(AerospikeBin("value", Long.MaxValue)))
-      bin <- client.get(key, new AerospikeRecordReader(Map("value" -> AerospikeLongConverter)))
-      _ <- client.delete(key)
-    } yield bin._2.getAs[Long]("value"), 10.seconds)
+  "PREPEND operation" should {
 
-    assert { result == Long.MaxValue }
+    val key = AerospikeKey(ns, set, "testprepend")
+
+    "prepend a string in a bin " in {
+      ready(client.put(key, Seq(Bin("foo", "hello"))))
+      ready(client.prepend(key, Seq(Bin("foo", "world"))))
+      val result = client.get(key, Seq("foo"))
+
+      whenReady(result) { r =>
+        assert { r.getString("foo") === "worldhello" }
+      }
+
+      clean(key)
+    }
   }
 
-  it should "allow to use low level methods" in {
-    val result = Await.result(for {
-      indexName <- client.createIndex("test", "persons", "age", IndexType.NUMERIC)
-      r1 <- client.put(AerospikeKey("test", "persons", "julien"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 26L)))
-      r2 <- client.put(AerospikeKey("test", "persons", "julien2"), Seq(AerospikeBin("name", "julien"), AerospikeBin("age", 14L)))
-      r3 <- client.put(AerospikeKey("test", "persons", "pierre"), Seq(AerospikeBin("name", "pierre"), AerospikeBin("age", 26L)))
-      r <- client.rawQueryEqualLong("test", "persons", Seq("name", "age"), "age", 26)
-      _ <- client.dropIndex("test", "persons", indexName)
-      _ <- client.delete(r1)
-      _ <- client.delete(r2)
-      _ <- client.delete(r3)
-    } yield r, 10.seconds)
+  "ADD operation" should {
 
-    assert { result.size == 2 }
-    assert { result.head._2.getLong("age") == 26 }
-    assert { result.head._2.getString("name") == "julien" }
-    assert { result.last._2.getString("name") == "pierre"}
+    val key = AerospikeKey(ns, set, "testadd")
+    val base = Seq(Bin("v1", 0), Bin("v2", 0), Bin("v3", Long.MaxValue), Bin("v4", Long.MinValue))
+    val op = Seq(Bin("v1", -1000), Bin("v2", 1000), Bin("v3", -Long.MaxValue), Bin("v4", -Long.MinValue))
+
+    "increment and decrement a bin" in {
+      ready(client.put(key, base))
+      ready(client.add(key, op))
+      val result = client.get(key)
+
+      whenReady(result) { r =>
+        assert { r.getLong("v1") === -1000 }
+        assert { r.getLong("v2") === 1000 }
+        assert { r.getLong("v3") === 0 }
+        assert { r.getLong("v4") === 0 }
+      }
+
+      clean(key)
+    }
+  }
+
+  "DELETE operation" should {
+
+    val key = AerospikeKey(ns, set, "testdelete")
+    val unknownKey = AerospikeKey(ns, set, "testdelete2")
+    val base = Seq(Bin("a", 0), Bin("b", 0))
+
+    "return true when deleting an existing record" in {
+      ready(client.put(key, base))
+      val delete = client.delete(key)
+
+      whenReady(delete) { existed =>
+        assert { existed === true }
+      }
+
+      val exists = client.exists(key)
+
+      whenReady(exists) { exists =>
+        assert { exists === false }
+      }
+
+      clean(key)
+    }
+
+    "return false when deleting a non existing record" in {
+      val delete = client.delete(unknownKey)
+
+      whenReady(delete) { existed =>
+        assert { existed === false }
+      }
+    }
+  }
+
+  "TOUCH operation" should {
+
+    val key = AerospikeKey(ns, set, "testtouch")
+
+    /*"create an empty record if the key don't exists" in {
+      ready(client.delete(key))
+      ready(client.touch(key))
+      val result = client.get(key)
+
+      result.onFailure { case ex => ex.printStackTrace() }
+
+      whenReady(result) { r =>
+        println(r.expiration)
+        assert { r.size === 0 }
+        assert { r.generation === 0 }
+
+      }
+    }*/
+
+    "Update the generation of an existing record" in {
+      ready(client.put(key, neutral))
+      val r1 = result(client.get(key))
+      ready(client.touch(key))
+      val r2 = result(client.get(key))
+
+      assert { r2.generation === r1.generation + 1 }
+
+      clean(key)
+    }
+
+    "Reset the expiration of a record" in {
+      val writePolicy10s = {
+        val p = new WritePolicy(client.asyncClient.asyncWritePolicyDefault)
+        p.expiration = 10
+        p
+      }
+
+      val writePolicy100s = {
+        val p = new WritePolicy(client.asyncClient.asyncWritePolicyDefault)
+        p.expiration = 100
+        p
+      }
+
+      ready(client.put(key, neutral, Some(writePolicy10s)))
+      val r1 = result(client.get(key))
+      ready(client.touch(key, Some(writePolicy100s)))
+      val r2 = result(client.get(key))
+
+      assert { r2.expiration > r1.expiration }
+
+      clean(key)
+    }
+  }
+
+  "EXISTS operation" should {
+    val key = AerospikeKey(ns, set, "testexists")
+
+    "Return false if the record doesn't exist" in {
+      val result = client.exists(key)
+
+      whenReady(result) { exists =>
+        assert { exists === false }
+      }
+    }
+
+    "Return true if the record exists" in {
+      ready(client.put(key, neutral))
+      val result = client.exists(key)
+
+      whenReady(result) { exists =>
+        assert { exists === true }
+      }
+
+      clean(key)
+    }
+  }
+
+  "HEADER operation" should {
+    val key = AerospikeKey(ns, set, "testheader")
+
+    "Return onlu the generation and the expiration data" in {
+      ready(client.put(key, neutral))
+      val result = client.header(key)
+
+      whenReady(result) { r =>
+        assert { r.expiration > 0 }
+        assert { r.generation > 0 }
+        assert { r.size === 0 }
+      }
+    }
+  }
+
+  "GETBIN operation" should {
+    val key = AerospikeKey(ns, set, "testgetbin")
+
+    "extract a single bin and cast it" in {
+      ready(client.put(key, complex))
+
+      val vString = result(client.getBin[String](key, "string", _.getString))
+      val vLong = result(client.getBin[Long](key, "long", _.getLong))
+      val invalidBin = result(client.getBin[String](key, "long", _.getString))
+
+      assert { vString === Some("hello") }
+      assert { vLong === Some(123L) }
+      assert { invalidBin === None }
+
+      clean(key)
+    }
+  }
+
+  "getMultiRecords operation" should {
+    val key1 = AerospikeKey(ns, set, "testgetmulti1")
+    val key2 = AerospikeKey(ns, set, "testgetmulti2")
+
+    "return a list of full records, wihtout userKey by default" in {
+      ready(client.put(key1, complex))
+      ready(client.put(key2, complex))
+      val result = client.getMultiRecords(Seq(key1, key2))
+
+      whenReady(result) { r =>
+        assert { r.size === 2 }
+        assert { r.head._2.getLong("long") === 123L }
+        assert { r.head._1.userKey === None }
+      }
+
+      clean(key1, key2)
+    }
+
+    /*"return the userKey if the BatchPolicy ask it" in {
+      val policyBatch = {
+        val p = new BatchPolicy(client.asyncClient.asyncBatchPolicyDefault)
+        p.sendKey = true
+        p
+      }
+      val policyWrite = {
+        val p = new WritePolicy(client.asyncClient.asyncWritePolicyDefault)
+        p.sendKey = true
+        p
+      }
+
+      ready(client.put(key1, complex, Some(policyWrite)))
+      val result = client.getMultiRecords(Seq(key1), Seq.empty, Some(policyBatch))
+
+      whenReady(result) { r =>
+        assert { r.head._1.userKey === Some("testgetmulti1") }
+      }
+
+      clean(key1)
+    }*/
   }
 
 }
