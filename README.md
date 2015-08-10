@@ -14,7 +14,7 @@ Add in your build.sbt
 ```scala
 resolvers += "Tabmo Bintray" at "https://dl.bintray.com/tabmo/maven"
 
-libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "1.0.0"
+libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "1.0.2"
 ```
 
 ## Usage
@@ -24,7 +24,7 @@ Usually you just need these imports:
 ```scala
 import io.tabmo.aerospike.client._
 import io.tabmo.aerospike.data._
-import io.tabmo.aerospike.converter._
+import io.tabmo.aerospike.converter.key._
 ```
 
 A client can be easily instantiated by proving host and port for your running server
@@ -195,6 +195,9 @@ See [QueryUsage](https://github.com/tabmo/ReactiveAerospike/blob/master/src/test
 ### UDF
 
 ```scala
+
+import io.tabmo.aerospike.converter.value._
+
 val result: Seq[AerospikeRecord] = 
   client.queryEqualAggregate(ns, set,
   "name", "thomas", // On what the filter is made?

@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalatest.BeforeAndAfterAll
 
 import io.tabmo.aerospike.client._
-import io.tabmo.aerospike.converter._
+import io.tabmo.aerospike.converter.key._
 import io.tabmo.aerospike.data.AerospikeOperations._
 import io.tabmo.aerospike.data.{AerospikeKey, Bin}
 

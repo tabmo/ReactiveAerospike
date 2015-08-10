@@ -23,7 +23,7 @@ case class AerospikeKey[T](inner: Key)(implicit keyConverter: AerospikeKeyConver
 
 object AerospikeKey {
 
-  import io.tabmo.aerospike.converter._
+  import io.tabmo.aerospike.converter.key._
 
   def apply(namespace: String, setName: String, value: Long): AerospikeKey[Long] = {
     AerospikeKey[Long](new Key(namespace, setName, value))
