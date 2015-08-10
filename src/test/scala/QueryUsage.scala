@@ -3,9 +3,8 @@ package io.tabmo.aerospike
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import com.aerospike.client.Value.LongValue
 import com.aerospike.client.query.IndexType
-import com.aerospike.client.{Bin => AEBin, Value}
+import com.aerospike.client.{Bin => AEBin}
 
 import io.tabmo.aerospike.client._
 import io.tabmo.aerospike.data.{AerospikeRecord, AerospikeKeyConverter, Bin, AerospikeKey}
@@ -117,7 +116,7 @@ class QueryUsage extends CustomSpec {
       val result = client.queryEqualAggregate(ns, set,
         "name", "thomas",
         this.getClass.getClassLoader, "persons.lua",
-        "persons", "filterByAge", Seq(new LongValue(19)))
+        "persons", "filterByAge", Seq(19))
 
       whenReady(result) { r =>
         assert { r.size === 1 }

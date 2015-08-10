@@ -199,7 +199,7 @@ val result: Seq[AerospikeRecord] =
   client.queryEqualAggregate(ns, set,
   "name", "thomas", // On what the filter is made?
   this.getClass.getClassLoader, "persons.lua", // where the UDF is
-  "persons", "filterByAge", Seq(new LongValue(19))) // What method/args call on the UDF?
+  "persons", "filterByAge", Seq(19)) // What method/args call on the UDF?
 ```
 
 See [UdfUsage](https://github.com/tabmo/ReactiveAerospike/blob/master/src/test/scala/UdfUsage.scala) for sample code.
