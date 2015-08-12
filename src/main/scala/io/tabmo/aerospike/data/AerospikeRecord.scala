@@ -2,7 +2,7 @@ package io.tabmo.aerospike.data
 
 import scala.util.Try
 
-import com.aerospike.client.Record
+import com.aerospike.client.{AerospikeException, Record}
 
 case class AerospikeRecord(bins: Map[String, AnyRef], generation: Int, expiration: Int) {
 
@@ -39,8 +39,16 @@ object AerospikeRecord {
   import scala.collection.JavaConverters._
 
   def apply(record: Record): AerospikeRecord = {
-    val bins = Option(record.bins).map(_.asScala.toMap).getOrElse(Map.empty)
-    AerospikeRecord(bins, record.generation, record.expiration)
+    Option(record) match {
+      case Some(r) =>
+        val bins = Option(r.bins).map(_.asScala.toMap).getOrElse(Map.empty)
+        AerospikeRecord(bins, r.generation, r.expiration)
+      case None => throw new AerospikeException("Record not found")
+    }
+  }
+
+  def optional(record: Record): Option[AerospikeRecord] = {
+    Option(record).map(apply)
   }
 }
 

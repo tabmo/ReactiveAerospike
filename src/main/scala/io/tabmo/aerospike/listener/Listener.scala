@@ -17,6 +17,11 @@ case class AerospikeReadListener() extends Listener[AerospikeRecord] with Record
   override def onFailure(exception: AerospikeException) = promise.failure(new AerospikeException(exception))
 }
 
+case class AerospikeOptionalReadListener() extends Listener[Option[AerospikeRecord]] with RecordListener {
+  override def onSuccess(key: Key, record: Record) = promise.success(AerospikeRecord.optional(record))
+  override def onFailure(exception: AerospikeException) = promise.failure(new AerospikeException(exception))
+}
+
 case class AerospikeReadSequenceListener[T](implicit keyConverter: AerospikeKeyConverter[T]) extends Listener[Map[AerospikeKey[T], AerospikeRecord]] with RecordSequenceListener {
   private val stream = Map.newBuilder[AerospikeKey[T], AerospikeRecord]
   override def onRecord(key: Key, record: Record) = stream += ((AerospikeKey(key), AerospikeRecord(record)))

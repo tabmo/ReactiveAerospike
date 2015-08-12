@@ -7,7 +7,7 @@ import io.tabmo.aerospike.data.{AerospikeKey, Bin}
 
 class UdfUsage extends CustomSpec with BeforeAndAfterAll {
 
-  val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)
+  /*val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)
 
   val ns = "test"
   val set = "unittest4"
@@ -18,6 +18,6 @@ class UdfUsage extends CustomSpec with BeforeAndAfterAll {
 
   override protected def afterAll() = {
     client.close()
-  }
+  }*/
 
 }

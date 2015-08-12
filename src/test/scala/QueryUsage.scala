@@ -6,14 +6,11 @@ import scala.concurrent.Future
 import com.aerospike.client.query.IndexType
 import com.aerospike.client.{Bin => AEBin}
 
-import io.tabmo.aerospike.client._
 import io.tabmo.aerospike.data.{AerospikeRecord, AerospikeKeyConverter, Bin, AerospikeKey}
 import io.tabmo.aerospike.converter.key._
 import io.tabmo.aerospike.converter.value.valueLongConverter
 
-class QueryUsage extends CustomSpec {
-
-  val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)
+class QueryUsage extends CustomSpec with AerospikeClientTest {
 
   val ns = "test"
   val set = "unittest2"

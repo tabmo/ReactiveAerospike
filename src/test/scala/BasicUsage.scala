@@ -7,13 +7,10 @@ import com.aerospike.client.policy.WritePolicy
 
 import org.scalatest.BeforeAndAfterAll
 
-import io.tabmo.aerospike.client._
 import io.tabmo.aerospike.converter.key._
 import io.tabmo.aerospike.data.{AerospikeKey, Bin}
 
-class BasicUsage extends CustomSpec with BeforeAndAfterAll {
-
-  val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)
+class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientTest {
 
   val ns = "test"
   val set = "unittest1"

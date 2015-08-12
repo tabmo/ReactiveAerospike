@@ -7,9 +7,8 @@ import io.tabmo.aerospike.data.AerospikeKeyConverter
 
 package object converter {
 
+  // Key converters
   object key {
-
-    // Key converters
     implicit val keyLongConverter: AerospikeKeyConverter[Long] = new AerospikeKeyConverter[Long] {
       override def convert(userKey: Value) = userKey.toLong
     }
@@ -19,9 +18,8 @@ package object converter {
     }
   }
 
+  // Value converters
   object value {
-
-    // Value converters
     implicit def valueLongConverter(value: Long): Value = new LongValue(value)
 
     implicit def valueStringConverter(value: String): Value = new StringValue(value)

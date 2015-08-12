@@ -4,6 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 import com.aerospike.client.Bin
+import com.aerospike.client.listener.RecordListener
 import com.aerospike.client.policy.{BatchPolicy, Policy, WritePolicy}
 
 import io.tabmo.aerospike.client.ReactiveAerospikeClient
@@ -91,15 +92,11 @@ trait BasicOperations {
   }
 
   def get(key: AerospikeKey[_], bins: Seq[String] = Seq.empty, policy: Option[Policy] = None): Future[AerospikeRecord] = {
+    innerGet(key, bins, AerospikeReadListener(), policy)
+  }
 
-    logger.debug(s"GET {$key} ${bins.mkString(", ")}")
-
-    val listener = AerospikeReadListener()
-    bins match {
-      case Nil => asyncClient.get(policy.orNull, listener, key.inner)
-      case _ => asyncClient.get(policy.orNull, listener, key.inner, bins: _*)
-    }
-    listener.result
+  def getOptional(key: AerospikeKey[_], bins: Seq[String] = Seq.empty, policy: Option[Policy] = None): Future[Option[AerospikeRecord]] = {
+    innerGet(key, bins, AerospikeOptionalReadListener(), policy)
   }
 
   def getBin[V](key: AerospikeKey[_], bin: String, convert: AerospikeRecord => String => V, policy: Option[Policy] = None)
@@ -125,4 +122,13 @@ trait BasicOperations {
     listener.result
   }
 
+  private def innerGet[T](key: AerospikeKey[_], bins: Seq[String] = Seq.empty, listener: Listener[T] with RecordListener, policy: Option[Policy] = None): Future[T] = {
+    logger.debug(s"GET {$key} ${bins.mkString(", ")}")
+
+    bins match {
+      case Nil => asyncClient.get(policy.orNull, listener, key.inner)
+      case _ => asyncClient.get(policy.orNull, listener, key.inner, bins: _*)
+    }
+    listener.result
+  }
 }
