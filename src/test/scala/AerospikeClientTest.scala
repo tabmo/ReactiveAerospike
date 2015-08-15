@@ -34,6 +34,8 @@ trait AerospikeClientTest {
     general
   }
 
-  protected val client = ReactiveAerospikeClient.connect("aerospiketestserver", 3000)(policy)
+  protected val host = System.getProperty("aerospike.host", "aerospiketestserver1")
+  protected val port = System.getProperty("aerospike.port", "3000").toInt
+  protected lazy val client = ReactiveAerospikeClient.connect(host, port)(policy)
 
 }

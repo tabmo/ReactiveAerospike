@@ -29,6 +29,7 @@ libraryDependencies ++= Seq(
 )
 
 parallelExecution in Test := false
+fork in Test := false
 
 /*
  * Publish to tabmo organization on bintray

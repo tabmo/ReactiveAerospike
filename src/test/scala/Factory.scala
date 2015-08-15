@@ -6,11 +6,11 @@ import org.scalatest._
 
 import io.tabmo.aerospike.client._
 
-class Factory extends FlatSpec {
+class Factory extends FlatSpec with AerospikeClientTest {
 
   "An aerospike client" can "be created from one host" in {
     try {
-      ReactiveAerospikeClient.connect("aerospiketestserver", 3000).close()
+      ReactiveAerospikeClient.connect(host, port).close()
     } catch {
       case NonFatal(ex) => fail(ex)
     }
@@ -18,7 +18,7 @@ class Factory extends FlatSpec {
 
   "An aerospike client" can "be created from multiple hosts" in {
     try {
-      ReactiveAerospikeClient("aerospiketestserver:3000", "aerospiketestserver").close()
+      ReactiveAerospikeClient(s"$host:$port", "localhost:3000").close()
     } catch {
       case NonFatal(ex) => fail(ex)
     }
