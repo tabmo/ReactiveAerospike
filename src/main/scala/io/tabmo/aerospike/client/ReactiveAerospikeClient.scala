@@ -29,7 +29,7 @@ object ReactiveAerospikeClient {
   }
 }
 
-class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: AsyncClientPolicy = new AsyncClientPolicy())
+class ReactiveAerospikeClient(val asyncClient: AsyncClient)
   extends BasicOperations
   with IndexOperations
   with QueryOperations
@@ -37,7 +37,7 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)(implicit policy: Asy
   with OperateOperations {
 
   protected val logger = LoggerFactory.getLogger(this.getClass)
-  
+
   def checkConnection() = {
     if (!asyncClient.isConnected) throw new AerospikeException("AerospikeClient not connected to cluster")
   }
