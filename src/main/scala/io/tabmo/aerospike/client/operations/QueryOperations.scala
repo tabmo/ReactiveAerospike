@@ -24,7 +24,7 @@ trait QueryOperations {
     policy: Option[QueryPolicy] = None)
       (implicit keyConverter: AerospikeKeyConverter[K]): Future[Map[AerospikeKey[K], AerospikeRecord]] = {
 
-    logger.debug(s"QUERY EQUAL $namespace:$set ON $filterBinName = $filterValue (${bins.mkString(", ")}")
+    logger.debug(s"QUERY EQUAL $namespace:$set ON $filterBinName = $filterValue (bins: ${if (bins.isEmpty) "*" else bins.mkString(", ")})")
 
     val statement = new Statement()
     statement.setNamespace(namespace)
@@ -50,7 +50,7 @@ trait QueryOperations {
     policy: Option[QueryPolicy] = None)
       (implicit keyConverter: AerospikeKeyConverter[K]): Future[Map[AerospikeKey[K], AerospikeRecord]] = {
 
-    logger.debug(s"QUERY RANGE $namespace:$set ON $filterBinName BETWEEN $rangeMin and $rangeMax (${bins.mkString(", ")}")
+    logger.debug(s"QUERY RANGE $namespace:$set ON $filterBinName BETWEEN $rangeMin and $rangeMax (bins: ${if (bins.isEmpty) "*" else bins.mkString(", ")})")
 
     val statement = new Statement()
     statement.setNamespace(namespace)
