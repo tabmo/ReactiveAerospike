@@ -29,7 +29,7 @@ trait QueryOperations {
     val statement = new Statement()
     statement.setNamespace(namespace)
     statement.setSetName(set)
-    statement.setBinNames(bins: _*)
+    if (bins.nonEmpty) statement.setBinNames(bins: _*)
 
     statement.setFilters(
       makeEqualFilter(filterBinName, filterValue)
@@ -55,7 +55,7 @@ trait QueryOperations {
     val statement = new Statement()
     statement.setNamespace(namespace)
     statement.setSetName(set)
-    statement.setBinNames(bins: _*)
+    if (bins.nonEmpty) statement.setBinNames(bins: _*)
 
     statement.setFilters(
       Filter.range(filterBinName, rangeMin, rangeMax)

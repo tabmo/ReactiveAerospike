@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "1.0.3"
+version := "1.0.4"
 
 organization := "io.tabmo"
 

@@ -82,6 +82,30 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       reset(data, indices)
     }
 
+    "allow to select all bins in a query" in {
+      val (data, indices) = init()
+
+      val result = client.queryEqual[Long, Long](ns, set, Seq.empty, "id", 1000)
+
+      whenReady(result) { r =>
+        assert { r.head._2.bins.keys.size === 3}
+      }
+
+      reset(data, indices)
+    }
+
+    "allow to filter bins in a query" in {
+      val (data, indices) = init()
+
+      val result = client.queryEqual[Long, Long](ns, set, Seq("id"), "id", 1000)
+
+      whenReady(result) { r =>
+        assert { r.head._2.bins.keys.size === 1}
+      }
+
+      reset(data, indices)
+    }
+
   }
 
   "RANGE queries" should {
