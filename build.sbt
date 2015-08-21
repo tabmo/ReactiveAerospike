@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "1.0.4"
+version := "1.0.5"
 
 organization := "io.tabmo"
 
@@ -37,3 +37,6 @@ fork in Test := false
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
 
 bintrayOrganization := Some("tabmo")
+
+// Exclude logback file
+mappings in (Compile, packageBin) ~= { _.filter(!_._1.getName.endsWith(".xml")) }
