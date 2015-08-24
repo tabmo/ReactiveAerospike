@@ -1,6 +1,6 @@
 name := """reactive-aerospike"""
 
-version := "1.0.5"
+version := "1.0.6"
 
 organization := "io.tabmo"
 
@@ -23,7 +23,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.aerospike" % "aerospike-client" % "3.1.3",
+  "com.aerospike" % "aerospike-client" % "3.1.4",
   "ch.qos.logback" % "logback-classic" % "1.1.3",
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )

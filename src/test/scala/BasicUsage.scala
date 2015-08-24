@@ -317,7 +317,7 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
     val key1 = AerospikeKey(ns, set, "testgetmulti1")
     val key2 = AerospikeKey(ns, set, "testgetmulti2")
 
-    "return a list of full records, wihtout userKey by default" in {
+    "return a list of full records" in {
       ready(client.put(key1, complex))
       ready(client.put(key2, complex))
       val result = client.getMultiRecords(Seq(key1, key2))
@@ -325,33 +325,12 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
       whenReady(result) { r =>
         assert { r.size === 2 }
         assert { r.head._2.getLong("long") === 123L }
-        assert { r.head._1.userKey === None }
+        assert { r.head._1.userKey === Some("testgetmulti1") }
       }
 
       clean(key1, key2)
     }
 
-    /*"return the userKey if the BatchPolicy ask it" in {
-      val policyBatch = {
-        val p = new BatchPolicy(client.asyncClient.asyncBatchPolicyDefault)
-        p.sendKey = true
-        p
-      }
-      val policyWrite = {
-        val p = new WritePolicy(client.asyncClient.asyncWritePolicyDefault)
-        p.sendKey = true
-        p
-      }
-
-      ready(client.put(key1, complex, Some(policyWrite)))
-      val result = client.getMultiRecords(Seq(key1), Seq.empty, Some(policyBatch))
-
-      whenReady(result) { r =>
-        assert { r.head._1.userKey === Some("testgetmulti1") }
-      }
-
-      clean(key1)
-    }*/
   }
 
 }
