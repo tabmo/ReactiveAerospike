@@ -5,9 +5,8 @@ import scala.util.Try
 import com.aerospike.client._
 import com.aerospike.client.async.{AsyncClient, AsyncClientPolicy}
 
-import org.slf4j.LoggerFactory
-
 import io.tabmo.aerospike.client.operations._
+import io.tabmo.aerospike.utils.Logger
 
 object ReactiveAerospikeClient {
 
@@ -36,7 +35,7 @@ class ReactiveAerospikeClient(val asyncClient: AsyncClient)
   with UdfOperations
   with OperateOperations {
 
-  protected val logger = LoggerFactory.getLogger(this.getClass)
+  protected val logger = Logger.getInstance(this.getClass)
 
   def checkConnection() = {
     if (!asyncClient.isConnected) throw new AerospikeException("AerospikeClient not connected to cluster")
