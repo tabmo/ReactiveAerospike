@@ -147,7 +147,7 @@ val bins = Seq(
   Bin("counter", 0)
 )
 
-val saveOperation = aerospike.put(key, bins)(writePolicyWithTTL)
+val saveOperation = aerospike.put(key, bins, Some(writePolicyWithTTL))
 val updateCounterOperation = aeropsike.add(key, Seq(Bin("counter", 1)))
 val readCounterOperation = aerospike.get(key, Seq("counter"))
 
