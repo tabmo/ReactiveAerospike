@@ -1,7 +1,5 @@
 name := """reactive-aerospike"""
 
-version := "1.0.7"
-
 organization := "io.tabmo"
 
 scalaVersion := "2.11.7"
