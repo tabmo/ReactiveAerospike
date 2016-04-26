@@ -1,11 +1,34 @@
 package io.tabmo.aerospike.utils
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.math.BigDecimal.RoundingMode
+
 import org.slf4j.LoggerFactory
 
 /**
  * Lazy logger
  */
 class Logger(logger: org.slf4j.Logger) {
+
+  private val idGenerator = new java.util.concurrent.atomic.AtomicLong()
+
+  def timing[T](key: String)(f: Future[T]): Future[T] = {
+    val id = idGenerator.incrementAndGet()
+
+    logger.debug(s"[$id] $key")
+    val start = System.nanoTime()
+
+    if (logger.isTraceEnabled) {
+      f.onComplete {
+        case _ =>
+          val duration = (BigDecimal(System.nanoTime() - start) / 1000000).setScale(2, RoundingMode.HALF_UP)
+          logger.trace(s"[$id] complete in ${duration}ms")
+      }
+    }
+
+    f
+  }
 
   /**
    * `true` if the logger instance is enabled for the `TRACE` level.

@@ -16,17 +16,18 @@ trait OperateOperations {
     (policy: Option[WritePolicy] = None)
       (implicit ec: ExecutionContext): Future[Option[AerospikeRecord]] = {
 
-    logger.debug(s"{$key} OPERATE ${operations.mkString(", ")}")
+    logger.timing(s"{$key} OPERATE ${operations.mkString(", ")}") {
 
-    val listener = new AerospikeReadListener()
-    asyncClient.operate(policy.orNull, listener, key.inner, operations.map(_.toOperation): _*)
-    val result = listener.result
+      val listener = new AerospikeReadListener()
+      asyncClient.operate(policy.orNull, listener, key.inner, operations.map(_.toOperation): _*)
+      val result = listener.result
 
-    operations.last match {
-      case _: get | `getAll` =>
-        result.map(Option.apply)
-      case _ =>
-        result.map(_ => None)
+      operations.last match {
+        case _: get | `getAll` =>
+          result.map(Option.apply)
+        case _ =>
+          result.map(_ => None)
+      }
     }
   }
 

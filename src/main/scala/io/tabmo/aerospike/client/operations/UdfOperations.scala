@@ -18,11 +18,11 @@ trait UdfOperations {
     policy: Option[WritePolicy] = None)
       (implicit ec: ExecutionContext): Future[Unit] = {
 
-    logger.debug(s"REGISTER UDF $resourcePath:$serverPath")
-
-    Future {
-      val task = asyncClient.register(policy.orNull, resourceLoader, resourcePath, serverPath, language)
-      while (!task.isDone) task.waitTillComplete(500)
+    logger.timing(s"REGISTER UDF $resourcePath:$serverPath") {
+      Future {
+        val task = asyncClient.register(policy.orNull, resourceLoader, resourcePath, serverPath, language)
+        while (!task.isDone) task.waitTillComplete(500)
+      }
     }
 
   }
@@ -34,11 +34,11 @@ trait UdfOperations {
     policy: Option[WritePolicy] = None)
       (implicit ec: ExecutionContext): Future[Unit] = {
 
-    logger.debug(s"REGISTER UDF $resourcePath:$serverPath")
-
-    Future {
-      val task = asyncClient.register(policy.orNull, resourcePath, serverPath, language)
-      while (!task.isDone) task.waitTillComplete(500)
+    logger.timing(s"REGISTER UDF $resourcePath:$serverPath") {
+      Future {
+        val task = asyncClient.register(policy.orNull, resourcePath, serverPath, language)
+        while (!task.isDone) task.waitTillComplete(500)
+      }
     }
   }
 
@@ -47,10 +47,10 @@ trait UdfOperations {
     policy: Option[InfoPolicy] = None)
       (implicit executionContext: ExecutionContext): Future[Unit] = {
 
-    logger.debug(s"REMOVE UDF $serverPath")
-
-    Future {
-      asyncClient.removeUdf(policy.orNull, serverPath)
+    logger.timing(s"REMOVE UDF $serverPath") {
+      Future {
+        asyncClient.removeUdf(policy.orNull, serverPath)
+      }
     }
   }
 

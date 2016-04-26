@@ -33,6 +33,7 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
     val index1 = result(client.createIndex(ns, set, "id", IndexType.NUMERIC))
     val index2 = result(client.createIndex(ns, set, "name", IndexType.STRING))
     val index3 = result(client.createIndex(ns, set, "age", IndexType.NUMERIC))
+    Thread.sleep(4000)
 
     (data, Seq(index1, index2, index3))
   }
@@ -144,6 +145,31 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
         assert { r.size === 1 }
         assert { r.head.getLong("age") === 22 }
         assert { r.head.getOptString("age") === None }
+      }
+
+      ready(client.removeUDF("persons.lua"))
+      reset(data, indices)
+    }
+  }
+
+  "parallel queryEqualAggregate operation" should {
+
+    "test" in {
+
+      val (data, indices) = init()
+
+      ready(client.registerUDF(this.getClass.getClassLoader, "persons.lua", "persons.lua"))
+
+      val results = 0.to(10).map { i =>
+        client.queryEqualAggregate(ns, set,
+          "name", "thomas",
+          this.getClass.getClassLoader, "persons.lua",
+          "persons", "filterByAge", Seq(18+i))
+      }
+
+      whenReady(Future.sequence(results)) { r =>
+        r.size === 10
+        r.map(_.map(_.getLong("age")).sum).sum === data.map(_._2.find(_.name == "age").get.value.toLong).sum
       }
 
       ready(client.removeUDF("persons.lua"))
