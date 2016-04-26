@@ -2,7 +2,7 @@ name := """reactive-aerospike"""
 
 organization := "io.tabmo"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq(
   "-deprecation",           // Warn when deprecated API are used
@@ -21,7 +21,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.aerospike" % "aerospike-client" % "3.1.4",
+  "com.aerospike" % "aerospike-client" % "3.2.2",
   "ch.qos.logback" % "logback-classic" % "1.1.3",
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
