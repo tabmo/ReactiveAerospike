@@ -96,7 +96,7 @@ trait QueryOperations {
     }
   }
 
-  def queryRangeAggregate[V: VRestriction](
+  def queryRangeAggregate(
    namespace: String,
    set: String,
    filterBinName: String,
@@ -124,7 +124,7 @@ trait QueryOperations {
     }
   }
 
-  private def queryAggregate[V: VRestriction](
+  private def queryAggregate(
    namespace: String,
    set: String,
    filter: Filter,

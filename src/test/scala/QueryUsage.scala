@@ -15,8 +15,10 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
   val set = "unittest2"
 
   def clean(key: AerospikeKey[_], keys: AerospikeKey[_]*) = (key +: keys).foreach(k => ready(client.delete(k)))
+
   def clean[K](data: Map[AerospikeKey[K], Seq[AEBin]]) = data.keys.foreach(k => ready(client.delete(k)))
-  def insert[K](data: Map[AerospikeKey[K], Seq[AEBin]])(implicit keyConv: AerospikeKeyConverter[K]) = data.map { case (key, bins) => ready(client.put(key, bins))}
+
+  def insert[K](data: Map[AerospikeKey[K], Seq[AEBin]])(implicit keyConv: AerospikeKeyConverter[K]) = data.map { case (key, bins) => ready(client.put(key, bins)) }
 
   def init() = {
     val data = Map(
@@ -51,8 +53,12 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       val result: Future[Map[AerospikeKey[Long], AerospikeRecord]] = client.queryEqual[Long, Long](ns, set, Seq("id", "name"), "id", 1000)
 
       whenReady(result) { r =>
-        assert { r.size === 2 }
-        assert { r.head._2.getLong("id") === 1000 }
+        assert {
+          r.size === 2
+        }
+        assert {
+          r.head._2.getLong("id") === 1000
+        }
         assert {
           r.values.forall { r =>
             val name = r.getString("name")
@@ -70,8 +76,12 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       val result = client.queryEqual[Long, String](ns, set, Seq("id", "name"), "name", "thomas")
 
       whenReady(result) { r =>
-        assert { r.size === 2 }
-        assert { r.head._2.getString("name") === "thomas" }
+        assert {
+          r.size === 2
+        }
+        assert {
+          r.head._2.getString("name") === "thomas"
+        }
         assert {
           r.values.forall { r =>
             val id = r.getLong("id")
@@ -89,7 +99,9 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       val result = client.queryEqual[Long, Long](ns, set, Seq.empty, "id", 1000)
 
       whenReady(result) { r =>
-        assert { r.head._2.bins.keys.size === 3}
+        assert {
+          r.head._2.bins.keys.size === 3
+        }
       }
 
       reset(data, indices)
@@ -101,7 +113,9 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       val result = client.queryEqual[Long, Long](ns, set, Seq("id"), "id", 1000)
 
       whenReady(result) { r =>
-        assert { r.head._2.bins.keys.size === 1}
+        assert {
+          r.head._2.bins.keys.size === 1
+        }
       }
 
       reset(data, indices)
@@ -119,9 +133,15 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       whenReady(result) { r =>
         val records = r.values.toList
 
-        assert { records.size === 3 }
-        assert { records.map(_.getLong("id")).sum === 6011 }
-        assert { records.exists(_.getString("name") == "henri") }
+        assert {
+          records.size === 3
+        }
+        assert {
+          records.map(_.getLong("id")).sum === 6011
+        }
+        assert {
+          records.exists(_.getString("name") == "henri")
+        }
       }
 
       reset(data, indices)
@@ -142,9 +162,15 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
         "persons", "filterByAge", Seq(Value.get(19)))
 
       whenReady(result) { r =>
-        assert { r.size === 1 }
-        assert { r.head.getLong("age") === 22 }
-        assert { r.head.getOptString("age") === None }
+        assert {
+          r.size === 1
+        }
+        assert {
+          r.head.getLong("age") === 22
+        }
+        assert {
+          r.head.getOptString("age") === None
+        }
       }
 
       ready(client.removeUDF("persons.lua"))
@@ -164,12 +190,42 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
         client.queryEqualAggregate(ns, set,
           "name", "thomas",
           this.getClass.getClassLoader, "persons.lua",
-          "persons", "filterByAge", Seq(Value.get(18+i)))
+          "persons", "filterByAge", Seq(Value.get(18 + i)))
       }
 
       whenReady(Future.sequence(results)) { r =>
         r.size === 10
         r.map(_.map(_.getLong("age")).sum).sum === data.map(_._2.find(_.name == "age").get.value.toLong).sum
+      }
+
+      ready(client.removeUDF("persons.lua"))
+      reset(data, indices)
+    }
+  }
+
+  "queryRangeAggregate operation" should {
+
+    "return the map result as AerospikeRecord" in {
+
+      val (data, indices) = init()
+
+      ready(client.registerUDF(this.getClass.getClassLoader, "persons.lua", "persons.lua"))
+
+      val result = client.queryRangeAggregate(ns, set,
+        "age", 17, 19,
+        this.getClass.getClassLoader, "persons.lua",
+        "persons", "filterByAge", Seq(Value.get(18)))
+
+      whenReady(result) { r =>
+        assert {
+          r.size === 1
+        }
+        assert {
+          r.head.getLong("age") === 18
+        }
+        assert {
+          r.head.getOptString("age") === None
+        }
       }
 
       ready(client.removeUDF("persons.lua"))
