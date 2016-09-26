@@ -4,9 +4,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import com.aerospike.client.query.IndexType
-import com.aerospike.client.{Bin => AEBin}
-
-import io.tabmo.aerospike.data.{AerospikeRecord, AerospikeKeyConverter, Bin, AerospikeKey}
+import com.aerospike.client.{Value, Bin => AEBin}
+import io.tabmo.aerospike.data.{AerospikeKey, AerospikeKeyConverter, AerospikeRecord, Bin}
 import io.tabmo.aerospike.converter.key._
 import io.tabmo.aerospike.converter.value.valueLongConverter
 
@@ -40,6 +39,7 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
 
   def reset[K](data: Map[AerospikeKey[K], Seq[AEBin]], indices: Seq[String]) = {
     indices.foreach(i => ready(client.dropIndex(ns, set, i)))
+    clean(data)
     clean(data)
   }
 
@@ -139,7 +139,7 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
       val result = client.queryEqualAggregate(ns, set,
         "name", "thomas",
         this.getClass.getClassLoader, "persons.lua",
-        "persons", "filterByAge", Seq(19))
+        "persons", "filterByAge", Seq(Value.get(19)))
 
       whenReady(result) { r =>
         assert { r.size === 1 }
@@ -164,7 +164,7 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
         client.queryEqualAggregate(ns, set,
           "name", "thomas",
           this.getClass.getClassLoader, "persons.lua",
-          "persons", "filterByAge", Seq(18+i))
+          "persons", "filterByAge", Seq(Value.get(18+i)))
       }
 
       whenReady(Future.sequence(results)) { r =>

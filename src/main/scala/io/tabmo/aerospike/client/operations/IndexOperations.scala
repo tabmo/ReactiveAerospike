@@ -4,6 +4,8 @@ import scala.concurrent.{Future, ExecutionContext}
 
 import com.aerospike.client.policy.Policy
 import com.aerospike.client.query.IndexType
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import io.tabmo.aerospike.client.ReactiveAerospikeClient
 
@@ -15,10 +17,12 @@ trait IndexOperations {
 
     logger.timing(s"CREATE INDEX $namespace:$setName:$binName ($indexType)") {
       Future {
-        val indexNameDefault = indexName.getOrElse(s"${namespace}_${setName}_$binName")
-        val task = asyncClient.createIndex(policy.orNull, namespace, setName, indexNameDefault, binName, indexType)
-        while (!task.isDone) task.waitTillComplete(500)
-        indexNameDefault
+        blocking {
+          val indexNameDefault = indexName.getOrElse(s"${namespace}_${setName}_$binName")
+          val task = asyncClient.createIndex(policy.orNull, namespace, setName, indexNameDefault, binName, indexType)
+          task.waitTillComplete()
+          indexNameDefault
+        }
       }
     }
   }
