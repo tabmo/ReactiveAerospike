@@ -1,12 +1,12 @@
 package io.tabmo.aerospike.client.operations
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
-import com.aerospike.client.Value
+import com.aerospike.client.{AerospikeException, Key, Record, Value}
+import com.aerospike.client.listener.RecordSequenceListener
 import com.aerospike.client.policy.QueryPolicy
 import com.aerospike.client.query.{Filter, Statement}
-
 import io.tabmo.aerospike.TSafe.VRestriction
 import io.tabmo.aerospike.client.ReactiveAerospikeClient
 import io.tabmo.aerospike.data.{AerospikeKey, AerospikeKeyConverter, AerospikeRecord}
@@ -82,25 +82,94 @@ trait QueryOperations {
       (implicit ec: ExecutionContext): Future[Seq[AerospikeRecord]] = {
 
     logger.timing(s"QUERY EQUAL AGGREGATE $namespace:$set ON $filterBinName = $filterValue with $packageName.$functionName(${args.mkString(", ")})") {
-
-      val statement = new Statement()
-      statement.setNamespace(namespace)
-      statement.setSetName(set)
-      statement.setAggregateFunction(classloader, resourcePath, packageName, functionName, args: _*)
-
-      statement.setFilters(
-        makeEqualFilter(filterBinName, filterValue)
+      queryAggregate(
+        namespace = namespace,
+        set = set,
+        filter = makeEqualFilter(filterBinName, filterValue),
+        classloader = classloader,
+        resourcePath = resourcePath,
+        packageName = packageName,
+        functionName = functionName,
+        args = args,
+        policy = policy
       )
+    }
+  }
 
-      Future {
-        val result = asyncClient.queryAggregate(policy.orNull, statement)
-        result.iterator().asScala.toList.map {
-          case r: java.util.HashMap[_, _] =>
-            val map = r.asScala.toMap.asInstanceOf[Map[String, AnyRef]]
-            new AerospikeRecord(map, -1, -1)
-          case r => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
+  def queryRangeAggregate(
+   namespace: String,
+   set: String,
+   filterBinName: String,
+   min: Long,
+   max: Long,
+   classloader: ClassLoader,
+   resourcePath: String,
+   packageName: String,
+   functionName: String,
+   args: Seq[Value] = Seq.empty,
+   policy: Option[QueryPolicy] = None)(implicit ec: ExecutionContext): Future[Seq[AerospikeRecord]] = {
+
+    logger.timing(s"QUERY RANGE AGGREGATE $namespace:$set ON $filterBinName between [$min,$max] with $packageName.$functionName(${args.mkString(", ")})") {
+      queryAggregate(
+        namespace = namespace,
+        set = set,
+        filter = Filter.range(filterBinName, min, max),
+        classloader = classloader,
+        resourcePath = resourcePath,
+        packageName = packageName,
+        functionName = functionName,
+        args = args,
+        policy = policy
+      )
+    }
+  }
+
+  private def queryAggregate(
+   namespace: String,
+   set: String,
+   filter: Filter,
+   classloader: ClassLoader,
+   resourcePath: String,
+   packageName: String,
+   functionName: String,
+   args: Seq[Value],
+   policy: Option[QueryPolicy])(implicit ec: ExecutionContext): Future[Seq[AerospikeRecord]] = {
+
+    val statement = new Statement()
+    statement.setNamespace(namespace)
+    statement.setSetName(set)
+    statement.setAggregateFunction(classloader, resourcePath, packageName, functionName, args: _*)
+
+    statement.setFilters(filter)
+
+    val promise = Promise[Seq[AerospikeRecord]]()
+    var results = List[AerospikeRecord]()
+    asyncClient.query(null, new RecordSequenceListener {
+
+      override def onRecord(key: Key, record: Record): Unit = {
+        record.bins match {
+          case r: java.util.HashMap[_, _] => results = unwrapSuccess(r) :: results
+          case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
         }
       }
+
+      override def onFailure(exception: AerospikeException): Unit = {
+        promise.failure(exception)
+      }
+
+      override def onSuccess(): Unit = {
+        promise.success(results)
+      }
+
+    }, statement)
+
+    promise.future
+  }
+
+  private def unwrapSuccess(record: java.util.HashMap[_, _]): AerospikeRecord = {
+    record.get("SUCCESS") match {
+      case r: java.util.HashMap[_, _] => new AerospikeRecord(r.asScala.toMap.asInstanceOf[Map[String, AnyRef]], -1, -1)
+      case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
     }
   }
 
