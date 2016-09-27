@@ -192,6 +192,42 @@ val result: Future[Map[AerospikeKey[Long], AerospikeRecord]] =
 
 See [QueryUsage](https://github.com/tabmo/ReactiveAerospike/blob/master/src/test/scala/QueryUsage.scala) for sample code.
 
+### QueryShape
+
+This feature is lean on Shapeless library. You can define your set and object to map from Aerospike record. In this way, you define mapping just one time and use it everywhere you want.
+
+Here is an example :
+
+```
+import io.tabmo.aerospike.converter.key._
+import io.tabmo.aerospike.utils.AerospikeDataSet
+
+import models.entities.ExpensesLine
+import models.entities.ids.LineId
+import shapeless.{Generic, HNil}
+
+case class PersonId(id: String) extends AnyVal
+case class Person(id: PersonId, name: String, age: Long)
+
+object PersonSet extends AerospikeDataSet("MyNamespace", "MySet"){ //define a dataset "MyNamespace.MySet"
+
+  private implicit val genPerson = Generic[Person] //Shapeless need a generic implicit to map HList to Person
+  private implicit val longToPersonId: Long => PersonId = PersonId.apply //define implicit function to map Long to PersonId
+
+  //The set contain 3 fields (id, name, age)  
+  private val personId = stringTo[PersonId]("id")
+  private val name = string("name")
+  private val age = long("age")
+  
+  private val personShape = shaped(personId :: name :: age :: HNil).to[Person] //Define the shape link to our object Person
+  val personWithAgeBetween = personShape.prepareQueryRange(age) //the query to fetch record by range according to the field age
+}
+
+implicit val client: ReactiveAerospike = ... //define your client as implicit val
+
+val persons: Future[Seq[Person]] = PersonSet.personWithAgeBetween(18,99) //Fetch all person from Set "MyNamespace.MySet" where age is between 18 and 99
+```
+
 ### UDF
 
 ```scala
@@ -210,6 +246,7 @@ See [UdfUsage](https://github.com/tabmo/ReactiveAerospike/blob/master/src/test/s
 ## Authors
 
 * Julien Lafont: <https://github.com/studiodev>
+* Romain Lecomte: <https://github.com/rlecomte>
 
 ### Original version
 

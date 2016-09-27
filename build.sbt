@@ -23,7 +23,9 @@ scalacOptions ++= Seq(
 libraryDependencies ++= Seq(
   "com.aerospike" % "aerospike-client" % "3.2.2",
   "ch.qos.logback" % "logback-classic" % "1.1.3",
-  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
+  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
+  "com.chuusai" %% "shapeless" % "2.3.2",
+  "org.typelevel" %% "cats" % "0.7.2"
 )
 
 parallelExecution in Test := false

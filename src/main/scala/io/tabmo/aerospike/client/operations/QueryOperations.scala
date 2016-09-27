@@ -134,7 +134,6 @@ trait QueryOperations {
    functionName: String,
    args: Seq[Value],
    policy: Option[QueryPolicy])(implicit ec: ExecutionContext): Future[Seq[AerospikeRecord]] = {
-
     val statement = new Statement()
     statement.setNamespace(namespace)
     statement.setSetName(set)
@@ -147,9 +146,12 @@ trait QueryOperations {
     asyncClient.query(null, new RecordSequenceListener {
 
       override def onRecord(key: Key, record: Record): Unit = {
-        record.bins match {
-          case r: java.util.HashMap[_, _] => results = unwrapSuccess(r) :: results
-          case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
+        if(record.bins.containsKey("FAILURE")) promise.failure(new AerospikeException(-1,s"${record.bins.get("FAILURE")}"))
+        else {
+          record.bins match {
+            case r: java.util.HashMap[_, _] => results = unwrapSuccess(r) :: results
+            case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
+          }
         }
       }
 
