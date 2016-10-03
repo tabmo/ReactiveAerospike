@@ -147,10 +147,7 @@ trait QueryOperations {
     asyncClient.query(null, new RecordSequenceListener {
 
       override def onRecord(key: Key, record: Record): Unit = {
-        record.bins match {
-          case r: java.util.HashMap[_, _] => results = unwrapSuccess(r) :: results
-          case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
-        }
+        results = AerospikeRecord(record) :: results
       }
 
       override def onFailure(exception: AerospikeException): Unit = {
@@ -164,13 +161,6 @@ trait QueryOperations {
     }, statement)
 
     promise.future
-  }
-
-  private def unwrapSuccess(record: java.util.HashMap[_, _]): AerospikeRecord = {
-    record.get("SUCCESS") match {
-      case r: java.util.HashMap[_, _] => new AerospikeRecord(r.asScala.toMap.asInstanceOf[Map[String, AnyRef]], -1, -1)
-      case r: Any => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
-    }
   }
 
   private def makeEqualFilter[V: VRestriction](filterBinName: String, filterValue: V): Filter = {
