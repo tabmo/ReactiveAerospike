@@ -258,9 +258,10 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
   }
 
   "EXISTS operation" should {
-    val key = AerospikeKey(ns, set, "testexists")
+
 
     "Return false if the record doesn't exist" in {
+      val key = AerospikeKey(ns, set, "notexist")
       val result = client.exists(key)
 
       whenReady(result) { exists =>
@@ -269,6 +270,7 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
     }
 
     "Return true if the record exists" in {
+      val key = AerospikeKey(ns, set, "testexists")
       ready(client.put(key, neutral))
       val result = client.exists(key)
 

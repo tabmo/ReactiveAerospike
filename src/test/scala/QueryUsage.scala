@@ -166,10 +166,10 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
           r.size === 1
         }
         assert {
-          r.head.getLong("age") === 22
+          unwrapSuccess(r.head).getLong("age") === 22
         }
         assert {
-          r.head.getOptString("age") === None
+          unwrapSuccess(r.head).getOptString("age") === None
         }
       }
 
@@ -195,7 +195,7 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
 
       whenReady(Future.sequence(results)) { r =>
         r.size === 10
-        r.map(_.map(_.getLong("age")).sum).sum === data.map(_._2.find(_.name == "age").get.value.toLong).sum
+        r.map(_.map(unwrapSuccess(_).getLong("age")).sum).sum === data.map(_._2.find(_.name == "age").get.value.toLong).sum
       }
 
       ready(client.removeUDF("persons.lua"))
@@ -221,10 +221,10 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
           r.size === 1
         }
         assert {
-          r.head.getLong("age") === 18
+          unwrapSuccess(r.head).getLong("age") === 18
         }
         assert {
-          r.head.getOptString("age") === None
+          unwrapSuccess(r.head).getOptString("age") === None
         }
       }
 
@@ -233,4 +233,8 @@ class QueryUsage extends CustomSpec with AerospikeClientTest {
     }
   }
 
+  private def unwrapSuccess(record: AerospikeRecord): AerospikeRecord = {
+    import collection.JavaConverters._
+    new AerospikeRecord(record.bins("SUCCESS").asInstanceOf[java.util.Map[String, AnyRef]].asScala.toMap, -1, -1)
+  }
 }
