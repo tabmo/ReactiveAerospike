@@ -1,10 +1,9 @@
 package io.tabmo.aerospike.client.operations
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 
-import com.aerospike.client.{AerospikeException, Key, Record, Value}
-import com.aerospike.client.listener.RecordSequenceListener
+import com.aerospike.client.Value
 import com.aerospike.client.policy.QueryPolicy
 import com.aerospike.client.query.{Filter, Statement}
 import io.tabmo.aerospike.TSafe.VRestriction
@@ -142,25 +141,15 @@ trait QueryOperations {
 
     statement.setFilters(filter)
 
-    val promise = Promise[Seq[AerospikeRecord]]()
-    var results = List[AerospikeRecord]()
-    asyncClient.query(null, new RecordSequenceListener {
-
-      override def onRecord(key: Key, record: Record): Unit = {
-        results = AerospikeRecord(record) :: results
+    Future {
+      val result = asyncClient.queryAggregate(policy.orNull, statement)
+      result.iterator().asScala.toList.map {
+        case r: java.util.HashMap[_, _] =>
+          val map = r.asScala.toMap.asInstanceOf[Map[String, AnyRef]]
+          new AerospikeRecord(map, -1, -1)
+        case r => throw new IllegalArgumentException(s"query result is of type ${r.getClass}, expecting HashMap")
       }
-
-      override def onFailure(exception: AerospikeException): Unit = {
-        promise.failure(exception)
-      }
-
-      override def onSuccess(): Unit = {
-        promise.success(results)
-      }
-
-    }, statement)
-
-    promise.future
+    }
   }
 
   private def makeEqualFilter[V: VRestriction](filterBinName: String, filterValue: V): Filter = {
