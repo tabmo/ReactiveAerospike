@@ -10,7 +10,7 @@ sealed trait AsValue
 
 object AsValue {
 
-  def apply(value: AnyRef): AsValue = {
+  private def apply(value: AnyRef): AsValue = {
     if (value == null) AsNull
     else {
       value match {

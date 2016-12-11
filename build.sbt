@@ -5,6 +5,8 @@ organization := "io.tabmo"
 scalaVersion := "2.11.8"
 
 scalacOptions ++= Seq(
+  "-Ypartial-unification", // enable fix for SI-2712
+  "-Yliteral-types",       // enable SIP-23 implementation
   "-deprecation",           // Warn when deprecated API are used
   "-feature",               // Warn for usages of features that should be importer explicitly
   "-unchecked",             // Warn when generated code depends on assumptions
@@ -24,7 +26,7 @@ libraryDependencies ++= Seq(
   "com.aerospike" % "aerospike-client" % "3.2.5",
   "ch.qos.logback" % "logback-classic" % "1.1.3",
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
-  "io.github.jto" %% "validation-core" % "2.0"
+  "com.chuusai" %% "shapeless" % "2.3.2"
 )
 
 parallelExecution in Test := false
@@ -36,6 +38,8 @@ fork in Test := false
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/Apache-2.0"))
 
 bintrayOrganization := Some("tabmo")
+
+scalaOrganization := "org.typelevel"
 
 // Exclude logback file
 mappings in (Compile, packageBin) ~= { _.filter(!_._1.getName.endsWith(".xml")) }
