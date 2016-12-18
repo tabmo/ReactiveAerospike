@@ -33,7 +33,13 @@ object AsValue {
   def string(v: String): AsString = AsString(v)
 }
 
-case class AsObject(kv: Map[String, AsValue]) extends AsValue
+case class AsObject(kv: Map[String, AsValue] = Map()) extends AsValue {
+  def ++(obj: AsObject): AsObject = AsObject(kv ++ obj.kv)
+}
+
+object AsObject {
+  def apply[V <: AsValue](key: String, value: V): AsObject = AsObject(Map(key -> value))
+}
 
 case class AsArray(array: IndexedSeq[AsValue]) extends AsValue
 
