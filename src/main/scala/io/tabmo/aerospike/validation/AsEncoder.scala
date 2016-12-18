@@ -45,7 +45,7 @@ object AsEncoder {
     implicit gen: LabelledGeneric.Aux[A, Repr],
     hlistEncoder: AsEncoder[Repr]
   ): AsEncoder[A] = instance { o =>
-    hlistEncoder.encode(gen.to(o)).asInstanceOf[AsObject]
+    hlistEncoder.encode(gen.to(o))
   }
 
   def apply[A](implicit ev: AsEncoder[A]): AsEncoder[A] = ev
