@@ -3,17 +3,18 @@ package io.tabmo.aerospike.validation
 import jto.validation.aerospike._
 
 trait AsDecoder[A] {
+  self =>
   def decode[V <: AsValue](v: V): Result[A]
+
+  def map[B](f: A => B): AsDecoder[B] = new AsDecoder[B] {
+    override def decode[V <: AsValue](v: V): Result[B] = self.decode(v).map(f)
+  }
 }
 
 object Result {
   def apply[A](a: A): Result[A] = Done(a)
-
-  def fromOption[A](opt: Option[A]) = opt match {
-    case Some(a) => Done(a)
-    case None => Failed
-  }
 }
+
 sealed abstract class Result[+A] {
   def map[B](f: A => B): Result[B]
 
@@ -51,7 +52,7 @@ object AsDecoder {
   implicit def listDecoder[A](implicit ev: AsDecoder[A]): AsDecoder[List[A]] = instance {
     case AsArray(seq) => seq.foldRight(Result(List[A]())){ case (e, acc) =>
       acc match {
-        case Done(s) => ev.decode(e).map(_ :: s)
+         case Done(s) => ev.decode(e).map(_ :: s)
         case Failed => Failed
       }
     }

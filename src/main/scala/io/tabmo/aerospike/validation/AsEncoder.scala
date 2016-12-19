@@ -3,7 +3,13 @@ package io.tabmo.aerospike.validation
 import jto.validation.aerospike._
 
 trait AsEncoder[A] {
+  self =>
+
   def encode(a: A): AsValue
+
+  def contramap[B](f: B => A): AsEncoder[B] = new AsEncoder[B] {
+    override def encode(b: B): AsValue = self.encode(f(b))
+  }
 }
 
 object AsEncoder {
