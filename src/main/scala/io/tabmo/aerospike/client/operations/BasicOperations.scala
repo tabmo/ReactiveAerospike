@@ -5,7 +5,7 @@ import scala.util.Try
 
 import com.aerospike.client.Bin
 import com.aerospike.client.listener.RecordListener
-import com.aerospike.client.policy.{BatchPolicy, Policy, WritePolicy}
+import com.aerospike.client.policy.{ScanPolicy, BatchPolicy, Policy, WritePolicy}
 
 import io.tabmo.aerospike.client.ReactiveAerospikeClient
 import io.tabmo.aerospike.data.{AerospikeKey, AerospikeKeyConverter, AerospikeRecord}
@@ -115,6 +115,16 @@ trait BasicOperations {
         case Nil => asyncClient.get(policy.orNull, listener, keys.map(_.inner).toArray)
         case _ => asyncClient.get(policy.orNull, listener, keys.map(_.inner).toArray, bins: _*)
       }
+      listener.result
+    }
+  }
+
+  def scanAll[K](namespace: String, set: String, bins: Seq[String] = Seq.empty, policy: Option[ScanPolicy] = None)
+    (implicit keyConverter: AerospikeKeyConverter[K]): Future[Map[AerospikeKey[K], AerospikeRecord]] = {
+
+    logger.timing(s"scanAll {$bins}") {
+      val listener = AerospikeReadSequenceListener[K]()
+      asyncClient.scanAll(policy.orNull, listener, namespace, set, bins: _*)
       listener.result
     }
   }
