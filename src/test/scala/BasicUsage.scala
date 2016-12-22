@@ -4,7 +4,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.util.Date
 
 import com.aerospike.client.policy.WritePolicy
-
 import org.scalatest.BeforeAndAfterAll
 
 import io.tabmo.aerospike.converter.key._
@@ -113,6 +112,26 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
       clean(key)
     }
 
+  }
+
+  "ScanAll operation" should {
+
+    val set = "scanall"
+    def akey(key: String): AerospikeKey[String] = AerospikeKey(ns, set, key)
+
+    "Read all bins of a record" in {
+      ready(client.put(akey("pk#01"), Seq(Bin("data", "#01"))))
+      ready(client.put(akey("pk#02"), Seq(Bin("data", "#02"))))
+      ready(client.put(akey("pk#03"), Seq(Bin("data", "#03"))))
+
+      val result = client.scanAll[String](ns, set)
+      whenReady(result) { r =>
+        assert { r.seq.size === 3 }
+        assert { r.values.map(_.getString("data")) === List("#01", "#02", "#03") }
+      }
+
+      clean(akey("pk#01"), akey("pk#02"), akey("pk#03"))
+    }
   }
 
   "APPEND operation" should {
