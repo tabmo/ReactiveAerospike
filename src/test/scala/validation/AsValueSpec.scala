@@ -1,18 +1,17 @@
 package validation
 
 import scala.collection.JavaConversions._
-import java.lang.Long
 
 import org.scalatest.{FlatSpec, Matchers}
 import io.tabmo.aerospike.data.AerospikeRecord
-import jto.validation.aerospike.{AsArray, AsLong, AsString, AsValue}
+import jto.validation.aerospike._
 
 class AsValueSpec extends FlatSpec with Matchers {
 
   "AsValue" should "well parse AerospikeRecord" in {
     val bins = Map[String, AnyRef](
       "name" -> "Romain",
-      "age" -> new Long(27),
+      "age" -> new java.lang.Long(27),
       "contact" -> mapAsJavaMap(Map(
         "address" -> "foo bar"
       )),
@@ -29,5 +28,4 @@ class AsValueSpec extends FlatSpec with Matchers {
 
     AsValue(tested) shouldBe expected
   }
-
 }
