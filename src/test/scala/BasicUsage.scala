@@ -4,12 +4,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.util.Date
 
 import com.aerospike.client.policy.WritePolicy
-import org.scalatest.BeforeAndAfterAll
-
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 import io.tabmo.aerospike.converter.key._
 import io.tabmo.aerospike.data.{AerospikeKey, Bin}
 
-class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientTest {
+class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientTest with Matchers {
 
   val ns = "test"
   val set = "unittest1"
@@ -127,7 +126,7 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
       val result = client.scanAll[String](ns, set)
       whenReady(result) { r =>
         assert { r.seq.size === 3 }
-        assert { r.values.map(_.getString("data")) === List("#01", "#02", "#03") }
+        r.values.map(_.getString("data")) should contain theSameElementsAs List("#01", "#02", "#03")
       }
 
       clean(akey("pk#01"), akey("pk#02"), akey("pk#03"))
@@ -345,8 +344,8 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
 
       whenReady(result) { r =>
         assert { r.size === 2 }
-        assert { r.head._2.getLong("long") === 123L }
-        assert { r.head._1.userKey === Some("testgetmulti1") }
+        assert { r.forall(_._2.getLong("long") === 123L) }
+        r.map(_._1.userKey) should contain allOf(key1.userKey, key2.userKey)
       }
 
       clean(key1, key2)
