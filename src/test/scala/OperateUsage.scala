@@ -34,7 +34,7 @@ class OperateUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClien
         append("string", "world"),
         getAll)()
 
-      result.onFailure { case ex => ex.printStackTrace() }
+      result.failed.foreach(ex => ex.printStackTrace())
 
       whenReady(result) { r =>
         assert { r.isDefined }

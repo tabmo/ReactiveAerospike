@@ -18,7 +18,9 @@ class Factory extends FlatSpec with AerospikeClientTest {
 
   "An aerospike client" can "be created from multiple hosts" in {
     try {
-      ReactiveAerospikeClient(s"$host:$port", "localhost:3000").close()
+      val host1 = s"$host:$port"
+      val host2 = "localhost:3000"
+      ReactiveAerospikeClient(host1, host2).close()
     } catch {
       case NonFatal(ex) => fail(ex)
     }

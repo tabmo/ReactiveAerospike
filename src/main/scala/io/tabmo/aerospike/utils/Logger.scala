@@ -60,7 +60,7 @@ class Logger(logger: org.slf4j.Logger) {
    *
    * @param message the message to log
    */
-  def trace(message: => String) {
+  def trace(message: => String): Unit = {
     if (logger.isTraceEnabled) logger.trace(message)
   }
 
@@ -70,7 +70,7 @@ class Logger(logger: org.slf4j.Logger) {
    * @param message the message to log
    * @param error the associated exception
    */
-  def trace(message: => String, error: => Throwable) {
+  def trace(message: => String, error: => Throwable): Unit = {
     if (logger.isTraceEnabled) logger.trace(message, error)
   }
 
@@ -79,7 +79,7 @@ class Logger(logger: org.slf4j.Logger) {
    *
    * @param message the message to log
    */
-  def debug(message: => String) {
+  def debug(message: => String): Unit = {
     if (logger.isDebugEnabled) logger.debug(message)
   }
 
@@ -89,7 +89,7 @@ class Logger(logger: org.slf4j.Logger) {
    * @param message the message to log
    * @param error the associated exception
    */
-  def debug(message: => String, error: => Throwable) {
+  def debug(message: => String, error: => Throwable): Unit = {
     if (logger.isDebugEnabled) logger.debug(message, error)
   }
 
@@ -98,7 +98,7 @@ class Logger(logger: org.slf4j.Logger) {
    *
    * @param message the message to log
    */
-  def info(message: => String) {
+  def info(message: => String): Unit = {
     if (logger.isInfoEnabled) logger.info(message)
   }
 
@@ -108,7 +108,7 @@ class Logger(logger: org.slf4j.Logger) {
    * @param message the message to log
    * @param error the associated exception
    */
-  def info(message: => String, error: => Throwable) {
+  def info(message: => String, error: => Throwable): Unit = {
     if (logger.isInfoEnabled) logger.info(message, error)
   }
 
@@ -117,7 +117,7 @@ class Logger(logger: org.slf4j.Logger) {
    *
    * @param message the message to log
    */
-  def warn(message: => String) {
+  def warn(message: => String): Unit = {
     if (logger.isWarnEnabled) logger.warn(message)
   }
 
@@ -127,7 +127,7 @@ class Logger(logger: org.slf4j.Logger) {
    * @param message the message to log
    * @param error the associated exception
    */
-  def warn(message: => String, error: => Throwable) {
+  def warn(message: => String, error: => Throwable): Unit = {
     if (logger.isWarnEnabled) logger.warn(message, error)
   }
 
@@ -136,7 +136,7 @@ class Logger(logger: org.slf4j.Logger) {
    *
    * @param message the message to log
    */
-  def error(message: => String) {
+  def error(message: => String): Unit = {
     if (logger.isErrorEnabled) logger.error(message)
   }
 
@@ -146,7 +146,7 @@ class Logger(logger: org.slf4j.Logger) {
    * @param message the message to log
    * @param error the associated exception
    */
-  def error(message: => String, error: => Throwable) {
+  def error(message: => String, error: => Throwable): Unit = {
     if (logger.isErrorEnabled) logger.error(message, error)
   }
 

@@ -129,7 +129,7 @@ trait BasicOperations {
     }
   }
 
-  private def innerGet[T](key: AerospikeKey[_], bins: Seq[String] = Seq.empty, listener: Listener[T] with RecordListener, policy: Option[Policy] = None): Future[T] = {
+  private def innerGet[T](key: AerospikeKey[_], bins: Seq[String], listener: Listener[T] with RecordListener, policy: Option[Policy]): Future[T] = {
     logger.timing(s"GET {$key} ${bins.mkString(", ")}") {
       bins match {
         case Nil => asyncClient.get(policy.orNull, listener, key.inner)

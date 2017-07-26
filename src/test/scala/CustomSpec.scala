@@ -12,7 +12,7 @@ trait CustomSpec extends WordSpec with ScalaFutures {
   implicit val defaultPatience = PatienceConfig(timeout = Span(2, Seconds), interval = Span(15, Millis))
 
   private val timeout = 5.seconds
-  def ready[T](f: Future[T]) { Await.ready(f, timeout) }
+  def ready[T](f: Future[T]): Unit = { val _ = Await.ready(f, timeout) }// Explicitly return unit
   def result[T](f: Future[T]): T = Await.result(f,timeout)
 
 }

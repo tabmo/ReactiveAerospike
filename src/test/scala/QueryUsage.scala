@@ -7,7 +7,6 @@ import com.aerospike.client.query.IndexType
 import com.aerospike.client.{Value, Bin => AEBin}
 import io.tabmo.aerospike.data.{AerospikeKey, AerospikeKeyConverter, AerospikeRecord, Bin}
 import io.tabmo.aerospike.converter.key._
-import io.tabmo.aerospike.converter.value.valueLongConverter
 
 class QueryUsage extends CustomSpec with AerospikeClientTest {
 

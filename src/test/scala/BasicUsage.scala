@@ -1,7 +1,6 @@
 package io.tabmo.aerospike
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import java.util.Date
 
 import com.aerospike.client.policy.WritePolicy
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -49,7 +48,6 @@ class BasicUsage extends CustomSpec with BeforeAndAfterAll with AerospikeClientT
          client.put(key, Bin("x", 'c'))
       """)
 
-      val date = new Date
       assertDoesNotCompile("""
          client.put(key, Bin("x", date))
       """)

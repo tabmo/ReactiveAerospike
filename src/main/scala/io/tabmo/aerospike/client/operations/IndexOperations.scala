@@ -5,7 +5,6 @@ import scala.concurrent.{Future, ExecutionContext}
 import com.aerospike.client.policy.Policy
 import com.aerospike.client.query.IndexType
 import scala.concurrent._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import io.tabmo.aerospike.client.ReactiveAerospikeClient
 

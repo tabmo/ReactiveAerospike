@@ -14,7 +14,9 @@ Add in your build.sbt
 ```scala
 resolvers += "Tabmo Bintray" at "https://dl.bintray.com/tabmo/maven"
 
-libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "1.0.7"
+libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "3.0.0"//scala 2.12
+//or
+libraryDependencies += "io.tabmo" %% "reactive-aerospike" % "2.0.0"//scala 2.11
 ```
 
 ## Usage
